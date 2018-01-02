@@ -304,7 +304,7 @@ void II_Play_S23_Closing()
 }
 void II_Play_S24_Select_mode()
 {
-	Serial.println("#SELECTMODE#"); //V190
+  Serial.println("#SELECTMODE#"); //V190
 
   II_PlayWave(snd_17, 2000 + ANT_POPC);
 }
@@ -314,19 +314,19 @@ void II_Play_S6_start_zhuque()
  
   result = random(1, 5);// 9 targets version
   switch(result)
-  	{
-	case 1:
-		II_Play_S6_G1();
-		break;
-		case 2:
-			II_Play_S6_G2();
-			break;
-			case 3:
-				II_Play_S6_G3();				
-				break;
-			default:
-				II_Play_S6_G4();
-			break;
+    {
+  case 1:
+    II_Play_S6_G1();
+    break;
+    case 2:
+      II_Play_S6_G2();
+      break;
+      case 3:
+        II_Play_S6_G3();        
+        break;
+      default:
+        II_Play_S6_G4();
+      break;
 
   }
 }
@@ -1293,8 +1293,8 @@ void run_Script(int times)
 
   for (i = 0; i < times; i++)
   {
-	if(i%5==0)
-		bt_upload_state_withoutack();
+  if(i%5==0)
+    bt_upload_state_withoutack();
 
     act_d = get_random_number();
 
@@ -1616,8 +1616,8 @@ bool bt_upload_data()// 0 means no respond.
 }
 void bt_upload_state_withoutack()// 0 means no respond.
 {
-	String backdata;
-	  backdata = "";
+  String backdata;
+    backdata = "";
       backdata.concat("#ACKTION#");
       Serial.println(backdata);
  
@@ -1836,14 +1836,14 @@ bool Traning_again()
   int key;
   key = 0;
   timeout = 0;
-
+  byte Temp_SS;
   Temp_SS = get_who_is_online();//v1.8
-	 if (SectionSelect != Temp_SS)
-	 {
-	   
-	   delay(2000);
-	   goto ReselectMode;
-	 }
+   if (SectionSelect != Temp_SS)
+   {
+     
+     delay(2000);
+     goto ReselectMode;
+   }
 
   II_Play_S25_again();
 
@@ -2051,9 +2051,9 @@ void loop() {
         {
           II_Play_S6_start_zhuque();
           delay(1000);
-		  
-		  II_Play_S5_welcome();
-		  delay(800);
+      
+      II_Play_S5_welcome();
+      delay(800);
           bt_uploadstate_forLoop();
           begin_traning();
 
