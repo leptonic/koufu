@@ -15,7 +15,7 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-#define VERION    216
+#define VERION    217
 //#define DEBUG 11
 #define ONLINE_DEBUG 12
 #define STEP2STEP_DEBUG 13
@@ -2302,7 +2302,9 @@ void setup() {
   gpio_init();
   randomSeed(analogRead(A7));
 
-  ss.begin(9600);
+  //== TBD  2017-Dec-30
+  // ss.begin(9600);
+  //== TBD  2017-Dec-30
   Serial.begin(9600);
 
   III_Rf_Init(0);
@@ -2329,12 +2331,13 @@ void setup() {
   //Serial.println("first sndtest TEST");
 #endif
 
-  pinMode(AMP, OUTPUT);
-  pinMode(BTP, OUTPUT);
-  III_AMP(1);
-  III_BT(1);
+  //== TBD  2017-Dec-30
+//  pinMode(AMP, OUTPUT);
+//  pinMode(BTP, OUTPUT);
+//  III_AMP(1);
+//  III_BT(1);
 
-  set_volume();
+//  set_volume();
 
 
 
