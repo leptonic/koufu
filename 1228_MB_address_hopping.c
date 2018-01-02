@@ -1,4 +1,4 @@
-//0.6 Debug mode ,base onKongFu 0.0.41
+﻿//0.6 Debug mode ,base onKongFu 0.0.41
 //0.7
 ///1029 Prerelease version
 //1.0 Nov-04 new rule ,and fixed button fake press,and reindex all postionof keys
@@ -15,7 +15,7 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-#define VERION    214
+#define VERION    216
 //#define DEBUG 11
 #define ONLINE_DEBUG 12
 #define STEP2STEP_DEBUG 13
