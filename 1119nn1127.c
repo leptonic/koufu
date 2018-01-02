@@ -6,8 +6,9 @@
 //1.6 remove link check and add silence mode
 //1.7 only for new PCB v3
 //1.8 ADD RESET CMD for PCB V3
+//1.9 add #START#//  2018-Jan-02
 #include <SoftwareSerial.h>
-#define VERION    180
+#define VERION    190
 //#define DEBUG 11
 //#define ONLINE_DEBUG 12
 
@@ -303,6 +304,8 @@ void II_Play_S23_Closing()
 }
 void II_Play_S24_Select_mode()
 {
+	Serial.println("#SELECTMODE#"); //V190
+
   II_PlayWave(snd_17, 2000 + ANT_POPC);
 }
 void II_Play_S6_start_zhuque()
@@ -1834,6 +1837,13 @@ bool Traning_again()
   key = 0;
   timeout = 0;
 
+  Temp_SS = get_who_is_online();//v1.8
+	 if (SectionSelect != Temp_SS)
+	 {
+	   
+	   delay(2000);
+	   goto ReselectMode;
+	 }
 
   II_Play_S25_again();
 
@@ -1862,6 +1872,7 @@ bool Traning_again()
     {
       if ((comdata[0] == '@') && (comdata[1] == 'M'))
       {
+      ReselectMode:
        SectionSelect = get_who_is_online();//v1.8
         II_Play_S24_Select_mode();
         Open_LED(0);
@@ -1930,6 +1941,7 @@ void setup() {
 #ifndef DEBUG  // WORKING
   II_Play_S1_start();
   silince_tot = 0;
+  Serial.println("#START#"); //V190
 
   while (!bt_pairing() && work_state == STATE_UNPARING_S1)
   {
