@@ -7,7 +7,8 @@
 //1.7 only for new PCB v3
 //1.8 ADD RESET CMD for PCB V3
 //1.9 Wirless Version1219 1220121
-//2.0 Wirless +frequency hopping 
+//2.0 Wirless +frequency hopping
+//216 test for debug mother board 
 #include <SoftwareSerial.h>
 #include <SPI.h>
 #include <Mirf.h>
