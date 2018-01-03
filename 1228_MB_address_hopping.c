@@ -15,8 +15,8 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-#define VERION    217
-//#define DEBUG 11
+#define VERION    218
+#define DEBUG 11
 #define ONLINE_DEBUG 12
 #define STEP2STEP_DEBUG 13
 
@@ -53,6 +53,9 @@
 #define LON 4
 #define LOFF 5
 
+#define SW_A2  100
+#define SW_A3  100
+#define SW_A4  100
 
 
 
@@ -82,7 +85,7 @@
 
 //#include <Keypad.h>
 
-SoftwareSerial ss(3, 4);
+SoftwareSerial ss(9, 6);
 //byte rowPins[3] = {3, 4, 5}; //connect to the row pinouts of the keypad
 //byte colPins[3] = {11, 12, 7}; //connect to the column pinouts of the keypad
 //char hexaKeys[3][3] = {{'1', '2', '3'}, {'4', '5', '6'}, {'7', '8', '9'}}; // the key value  NEED MODFIY BY SETUP
@@ -140,7 +143,7 @@ String comdata = "";
 String ID = "";
 bool gSilence_Mode;
 byte data[2];
-
+byte Channel;
 
 void(* resetFunc) (void) = 0;
 void bt_Throwout_Error_withoutack();
@@ -639,6 +642,91 @@ void  III_Switch_LED(bool sw, int i)
   else
     w_Send_oneSignal(LOFF, i);
 }
+void v2_GreenLED(bool sw)
+{
+pinMode(15,OUTPUT);
+if(sw)
+//	analogWrite(A1,255);
+   digitalWrite(15,HIGH);
+else
+//	analogWrite(A1,0);
+digitalWrite(15,LOW);
+
+}
+
+void v2_Get_Channel_Switch()
+{
+	Channel=0;
+	
+	if(analogRead(A2)>SW_A2)
+	{
+		delay(79);
+		if(analogRead(A2)>SW_A2)
+		{
+			delay(99);
+            if(analogRead(A2)>SW_A2)
+			{			
+			Channel = 0x01;
+			}
+
+		}
+			
+	}
+		
+	if(analogRead(A3)>SW_A3)
+	{
+		delay(89);
+		if(analogRead(A3)>SW_A3)
+		{
+			delay(89);
+			if(analogRead(A3)>SW_A3)
+			{
+			  Channel |= 0x02;
+			}
+		 
+		}
+
+	}
+		
+	if(analogRead(A4)>SW_A4)
+	{
+		delay(99);
+		if(analogRead(A4)>SW_A4)
+		{
+			delay(79);
+			if(analogRead(A4)>SW_A4)
+			{
+			
+			  Channel |= 0x04;
+			}
+			
+		}
+		
+	}
+		
+}
+
+void v2_Get_Channel_Switch_debug()
+{
+	int result;
+	result=analogRead(A2);
+	Serial.print("A2:");
+	Serial.println(result);
+	delay(100);
+
+	result=analogRead(A3);
+	Serial.print("A3:");
+	Serial.println(result);
+	delay(100);
+
+	
+	result=analogRead(A4);
+	Serial.print("A4:");
+	Serial.println(result);
+	delay(100);
+
+}
+
 void RF_test_receive_data()
 {
 //  byte data[Mirf.payload];
@@ -2302,25 +2390,27 @@ void setup() {
   gpio_init();
   randomSeed(analogRead(A7));
 
-  //== TBD  2017-Dec-30
-  // ss.begin(9600);
-  //== TBD  2017-Dec-30
+  
+   ss.begin(9600);
+ 
   Serial.begin(9600);
 
   III_Rf_Init(0);
   
 #ifdef STEP2STEP_DEBUG
-  Serial.println("STEP2STEP_DEBUG");
-  Serial.print("--------ver");
- Serial.println(VERION);
+  Serial.println("S2Step Open");
+#ifndef DEBUG
+  Serial.print("--------Ver");
+  Serial.println(VERION);
+#endif
 
 #endif
 
 
 
 #ifdef DEBUG
-  Serial.println("KongFu Debug");
-  Serial.print("--------ver");
+  Serial.println("KongFu DebugMode");
+  Serial.print("--------Ver");
   Serial.println(VERION);
   //Serial.println("LED ALL ON");
   //Serial.println("BLUETOOTH DEBUG");
@@ -2384,12 +2474,12 @@ void _test()
 {
 //=========test who is online
 
-  String backdata = "";	
-//    Serial.println("start check who is online");
-	   SectionSelect = get_who_is_online();
-	 backdata.concat("#");
-		  backdata.concat(SectionSelect);
-		  Serial.println(backdata);
+//  String backdata = "";	
+ //   Serial.println("start check who is online");
+//	   SectionSelect = get_who_is_online();
+//	 backdata.concat("#");
+//		  backdata.concat(SectionSelect);
+//		  Serial.println(backdata);
 
 //test_all_target();
 
@@ -2406,8 +2496,17 @@ void _test()
 //else
 //Serial.println("f");
 
+//Serial.println("==LED TEST");
+//v2_GreenLED(true);
+//delay(3000);
+//v2_GreenLED(false);
+//delay(3000);
 
-delay(3000);
+//Serial.println("==SW TEST");
+//v2_Get_Channel_Switch_debug();
+//delay(2000);
+
+
 
 //=============test beats
 //run_Script_test();
