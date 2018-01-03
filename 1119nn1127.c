@@ -7,8 +7,9 @@
 //1.7 only for new PCB v3
 //1.8 ADD RESET CMD for PCB V3
 //1.9 add #START#//  2018-Jan-02
+//1.92 follow wild wind protocol 13
 #include <SoftwareSerial.h>
-#define VERION    190
+#define VERION    192
 //#define DEBUG 11
 //#define ONLINE_DEBUG 12
 
@@ -47,14 +48,14 @@
 #define PAIRING_TIMEOUT 30000
 #define CONNECT_CHECK_TIMEOUT 500
 #define TRY_AGAIN_TIMEOUT 5
-#define TRY_AGAIN_TIMEO 360
+#define TRY_AGAIN_TIMEO 36000
 #define RUN_SCRIPT_TIME 10
 #define ONEBIRD_START_TIMEOUT 1
 #else
 #define PAIRING_TIMEOUT 30000
 #define CONNECT_CHECK_TIMEOUT 500
 #define TRY_AGAIN_TIMEOUT 15
-#define TRY_AGAIN_TIMEO 360
+#define TRY_AGAIN_TIMEO 36000
 #define RUN_SCRIPT_TIME 90
 #define ONEBIRD_START_TIMEOUT 10
 
@@ -304,7 +305,8 @@ void II_Play_S23_Closing()
 }
 void II_Play_S24_Select_mode()
 {
-  Serial.println("#SELECTMODE#"); //V190
+  
+  bt_upload_select_withoutack();
 
   II_PlayWave(snd_17, 2000 + ANT_POPC);
 }
@@ -784,7 +786,8 @@ bool beat_bird_toSTART()
       Open_LED(timeout % 7 + 1);
     else
       Open_LED(0);
-
+   if(i%600==0)
+	  bt_upload_state_withoutack();//v192
     key = key_scan();
 #ifdef ONLINE_DEBUG
     if (key != 0)
@@ -1293,7 +1296,7 @@ void run_Script(int times)
 
   for (i = 0; i < times; i++)
   {
-  if(i%5==0)
+  if(i%3==0)
     bt_upload_state_withoutack();
 
     act_d = get_random_number();
@@ -1501,6 +1504,7 @@ bool bt_pairing()// ture connected; false disconnect
 
 bool bt_Select_Mode()// 0 means no respond.
 {
+SELECTBIGIN:
   String backdata = "";
   bool first_talk = 0;
   timeout = 0;
@@ -1527,6 +1531,11 @@ bool bt_Select_Mode()// 0 means no respond.
       {
         first_talk = 1;
         break;
+      }
+      else if ((comdata[0] == '@') && (comdata[1] == 'P'))//V192
+      {
+		ID = comdata.substring(3, 9);
+		goto SELECTBIGIN;	   
       }
       else
       {
@@ -1624,6 +1633,38 @@ void bt_upload_state_withoutack()// 0 means no respond.
 
 
 }
+void bt_upload_begin_withoutack()// 0 means no respond.
+{
+  String backdata;
+    backdata = "";
+      backdata.concat("#START#");
+      Serial.println(backdata);
+
+
+
+}
+void bt_upload_next_withoutack()// 0 means no respond.
+{
+  String backdata;
+    backdata = "";
+      backdata.concat("#NEXT#");
+      Serial.println(backdata);
+ 
+
+
+}
+void bt_upload_select_withoutack()// 0 means no respond.
+{
+  String backdata;
+    backdata = "";
+      backdata.concat("#SELECTMODE#");
+      Serial.println(backdata);
+ 
+
+
+}
+
+
 void bt_Throwout_Error_withoutack()// 0 means no respond.//v1.8
 {
   String backdata;
@@ -1799,7 +1840,7 @@ bool Bluetooth_test()
   test_bt_upload_state();
   //  test_bt_upload();
 }
-bool Traning_again_zhuque()
+bool Training_again_zhuque()
 {
 
   int key;
@@ -1830,12 +1871,13 @@ bool Traning_again_zhuque()
   return false;
 }
 
-bool Traning_again()
+bool Training_again()
 {
 
   int key;
   key = 0;
   timeout = 0;
+  comdata = "";
   byte Temp_SS;
   Temp_SS = get_who_is_online();//v1.8
    if (SectionSelect != Temp_SS)
@@ -1850,6 +1892,10 @@ bool Traning_again()
   while ((key == 0) && timeout < TRY_AGAIN_TIMEO)
   {
     timeout++;
+	
+	if(i%3000==0)
+	  bt_upload_next_withoutack();//v192
+	
     if (gCheck_Section_Select(timeout % 7 + 1))
       Open_LED(timeout % 7 + 1);
     else
@@ -1885,7 +1931,7 @@ bool Traning_again()
         }
         work_state = STATE_PRE_TRAINNING_S5; // break the while
         gSection_Select_outspaker();
-        return Traning_again_zhuque();
+        return Training_again_zhuque();
       }
       else
       {
@@ -1941,7 +1987,7 @@ void setup() {
 #ifndef DEBUG  // WORKING
   II_Play_S1_start();
   silince_tot = 0;
-  Serial.println("#START#"); //V190
+  bt_upload_begin_withoutack();
 
   while (!bt_pairing() && work_state == STATE_UNPARING_S1)
   {
@@ -2047,7 +2093,7 @@ void loop() {
       while ((work_state == STATE_IDEA) && (bbts_timeout < TRY_AGAIN_TIMEOUT))
       {
 
-        if (Traning_again())
+        if (Training_again())
         {
           II_Play_S6_start_zhuque();
           delay(1000);
