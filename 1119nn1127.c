@@ -786,7 +786,7 @@ bool beat_bird_toSTART()
       Open_LED(timeout % 7 + 1);
     else
       Open_LED(0);
-   if(i%600==0)
+   if(timeout%600==0)
 	  bt_upload_state_withoutack();//v192
     key = key_scan();
 #ifdef ONLINE_DEBUG
@@ -1893,7 +1893,7 @@ bool Training_again()
   {
     timeout++;
 	
-	if(i%3000==0)
+	if(timeout%3000==0)
 	  bt_upload_next_withoutack();//v192
 	
     if (gCheck_Section_Select(timeout % 7 + 1))

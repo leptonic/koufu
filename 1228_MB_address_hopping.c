@@ -38,7 +38,7 @@
 #define BASE_FREQUNCY   90
 #define SPEED_DATA_RATES 0x0e// 0x06 7 1M 0x0f 2M 
 
-#define AMP 14 //A0
+#define AMP 4 //A0
 #define BTP 15 //A1
 
 
@@ -85,7 +85,7 @@
 
 //#include <Keypad.h>
 
-SoftwareSerial ss(9, 6);
+SoftwareSerial ss(6, 9);
 //byte rowPins[3] = {3, 4, 5}; //connect to the row pinouts of the keypad
 //byte colPins[3] = {11, 12, 7}; //connect to the column pinouts of the keypad
 //char hexaKeys[3][3] = {{'1', '2', '3'}, {'4', '5', '6'}, {'7', '8', '9'}}; // the key value  NEED MODFIY BY SETUP
@@ -1915,8 +1915,8 @@ bool bt_Select_Mode()// 0 means no respond.
       {
         if ((comdata[0] == '@') && (comdata[1] == 'S'))
         {
-          char ss = comdata[3];
-          SectionSelect = (byte)ss;//ss-48;
+          char ss1 = comdata[3];
+          SectionSelect = (byte)ss1;//ss-48;
           backdata = "";
           backdata.concat("ACK#OK#");
           Serial.println(backdata);
@@ -2427,7 +2427,7 @@ void setup() {
 //  III_AMP(1);
 //  III_BT(1);
 
-//  set_volume();
+  set_volume();
 
 
 
@@ -2506,6 +2506,20 @@ void _test()
 //v2_Get_Channel_Switch_debug();
 //delay(2000);
 
+Serial.println("==SoundCard TEST");
+III_AMP(true);
+
+II_PlayWave(snd_1,200);
+II_PlayWave(snd_2,200);
+III_AMP(false);
+
+II_PlayWave(snd_3,2000 + ANT_POPC);
+III_AMP(false);
+
+II_PlayWave(snd_3,2000 + ANT_POPC);
+
+
+delay(2000);
 
 
 //=============test beats
