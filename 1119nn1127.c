@@ -1573,6 +1573,12 @@ SELECTBIGIN:
           Serial.println(backdata);
           return true;
         }
+	  else if ((comdata[0] == '@') && (comdata[1] == 'P'))//V192
+      {
+		ID = comdata.substring(3, 9);
+		SectionSelect = get_who_is_online();
+		goto SELECTBIGIN;	   
+      }
         else
         {
           comdata = "";
