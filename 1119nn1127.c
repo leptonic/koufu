@@ -74,6 +74,7 @@ LedControl lc = LedControl(8, 9, 10, 1); // pin 8,9,10
 unsigned long delaytimes = 2000;
 //Keypad customKeypad = Keypad( makeKeymap(hexaKeys), rowPins, colPins, 3, 3);
 byte SectionSelect;
+
 byte GameMode;
 
 ////resource part
@@ -1516,6 +1517,7 @@ SELECTBIGIN:
     if (timeout < 2)
     {
       backdata.concat("#");
+	  
       backdata.concat(SectionSelect);
       Serial.println(backdata);
     }
@@ -1535,7 +1537,7 @@ SELECTBIGIN:
       else if ((comdata[0] == '@') && (comdata[1] == 'P'))//V192
       {
 		ID = comdata.substring(3, 9);
-		  SectionSelect = get_who_is_online();
+		SectionSelect = get_who_is_online();
 		goto SELECTBIGIN;	   
       }
       else
