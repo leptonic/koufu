@@ -9,7 +9,7 @@
 //1.9 add #START#//  2018-Jan-02
 //1.92 follow wild wind protocol 13
 #include <SoftwareSerial.h>
-#define VERION    192
+#define VERION    193
 //#define DEBUG 11
 //#define ONLINE_DEBUG 12
 
@@ -1535,6 +1535,7 @@ SELECTBIGIN:
       else if ((comdata[0] == '@') && (comdata[1] == 'P'))//V192
       {
 		ID = comdata.substring(3, 9);
+		  SectionSelect = get_who_is_online();
 		goto SELECTBIGIN;	   
       }
       else
@@ -1880,7 +1881,7 @@ bool Training_again()
   comdata = "";
   byte Temp_SS;
   Temp_SS = get_who_is_online();//v1.8
-   if (SectionSelect != Temp_SS)
+   if ((SectionSelect&Temp_SS)!=SectionSelect)//v193
    {
      
      delay(2000);
