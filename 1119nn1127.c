@@ -1487,7 +1487,7 @@ bool bt_pairing()// ture connected; false disconnect
         backdata.concat("ACK#");
 
         ID = comdata.substring(3, 9);
-
+		comdata="";
         backdata.concat(ID);
         backdata.concat("#");
         Serial.println(backdata);
@@ -1542,6 +1542,7 @@ SELECTBIGIN:
     {
       if ((comdata[0] == 'A') && (comdata[1] == 'C'))
       {
+      comdata = "";
         first_talk = 1;
         break;
       }
@@ -1594,6 +1595,7 @@ SELECTBIGIN:
 	  else if ((comdata[0] == '@') && (comdata[1] == 'P'))//V192
       {
 		ID = comdata.substring(3, 9);
+		comdata = "";
 		SectionSelect = get_who_is_online();
 		backdata = "";
 		backdata.concat("#");	  
@@ -1645,7 +1647,7 @@ bool bt_upload_data()// 0 means no respond.
     {
       if ((comdata[0] == 'A') && (comdata[1] == 'C'))
       {
-
+		comdata = "";
         return true;
       }
 
@@ -1752,7 +1754,7 @@ bool bt_upload_state()// 0 means no respond.
     {
       if ((comdata[0] == 'A') && (comdata[1] == 'C'))
       {
-
+		comdata = "";
         return true;
       }
 
@@ -1951,6 +1953,7 @@ bool Training_again()
       if ((comdata[0] == '@') && (comdata[1] == 'M'))
       {
       ReselectMode:
+	  	comdata="";
        SectionSelect = get_who_is_online();//v1.8
         II_Play_S24_Select_mode();
         Open_LED(0);
