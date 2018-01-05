@@ -9,7 +9,7 @@
 //1.9 add #START#//  2018-Jan-02
 //1.92 follow wild wind protocol 13
 #include <SoftwareSerial.h>
-#define VERION    195
+#define VERION    196
 //#define DEBUG 11
 //#define ONLINE_DEBUG 12
 
@@ -1553,12 +1553,12 @@ SELECTBIGIN:
       {
 		ID = comdata.substring(3, 9);
 		comdata="";
-		SectionSelect = get_who_is_online();
-		backdata = "";
-		backdata.concat("#");	  
-      backdata.concat(SectionSelect);
-      Serial.println(backdata);
-		delay(500);
+    	SectionSelect = get_who_is_online();
+//		backdata = "";
+//		backdata.concat("#");	  
+//      backdata.concat(SectionSelect);
+//      Serial.println(backdata);
+		delay(2000);
 		goto SELECTBIGIN;	   
       }
       else
@@ -1600,11 +1600,11 @@ SELECTBIGIN:
 		ID = comdata.substring(3, 9);
 		comdata = "";
 		SectionSelect = get_who_is_online();
-		backdata = "";
-		backdata.concat("#");	  
-      backdata.concat(SectionSelect);
-      Serial.println(backdata);
-		delay(500);
+//		backdata = "";
+//		backdata.concat("#");	  
+//      backdata.concat(SectionSelect);
+//      Serial.println(backdata);
+		delay(2000);
 		goto SELECTBIGIN;	   
       }
         else
