@@ -9,7 +9,7 @@
 //1.9 add #START#//  2018-Jan-02
 //1.92 follow wild wind protocol 13
 #include <SoftwareSerial.h>
-#define VERION    193
+#define VERION    194
 //#define DEBUG 11
 //#define ONLINE_DEBUG 12
 
@@ -1493,6 +1493,16 @@ bool bt_pairing()// ture connected; false disconnect
         Serial.println(backdata);
         return true;
       }
+	  else if(comdata[0] == '@') && (comdata[1] == 'V'))
+	  {
+		  String backdata;
+		  backdata.concat("#");
+		  backdata.concat(VERION);				
+		  backdata.concat("#");
+		  Serial.println(backdata);
+	      continue;
+
+	  }
       else
       {
         comdata = "";
