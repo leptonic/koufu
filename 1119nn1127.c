@@ -1493,13 +1493,14 @@ bool bt_pairing()// ture connected; false disconnect
         Serial.println(backdata);
         return true;
       }
-	  else if(comdata[0] == '@') && (comdata[1] == 'V'))
+	  else if((comdata[0] == '@') && (comdata[1] == 'V'))
 	  {
 		  String backdata;
 		  backdata.concat("#");
 		  backdata.concat(VERION);				
 		  backdata.concat("#");
 		  Serial.println(backdata);
+		  comdata="";
 	      continue;
 
 	  }
@@ -1526,8 +1527,8 @@ SELECTBIGIN:
     timeout++;
     if (timeout < 2)
     {
-      backdata.concat("#");
-	  
+    backdata = "";
+      backdata.concat("#");	  
       backdata.concat(SectionSelect);
       Serial.println(backdata);
     }
@@ -1547,7 +1548,13 @@ SELECTBIGIN:
       else if ((comdata[0] == '@') && (comdata[1] == 'P'))//V192
       {
 		ID = comdata.substring(3, 9);
+		comdata="";
 		SectionSelect = get_who_is_online();
+		backdata = "";
+		backdata.concat("#");	  
+      backdata.concat(SectionSelect);
+      Serial.println(backdata);
+		delay(500);
 		goto SELECTBIGIN;	   
       }
       else
@@ -1577,6 +1584,7 @@ SELECTBIGIN:
         if ((comdata[0] == '@') && (comdata[1] == 'S'))
         {
           char ss = comdata[3];
+		  comdata="";
           SectionSelect = (byte)ss;//ss-48;
           backdata = "";
           backdata.concat("ACK#OK#");
@@ -1587,6 +1595,11 @@ SELECTBIGIN:
       {
 		ID = comdata.substring(3, 9);
 		SectionSelect = get_who_is_online();
+		backdata = "";
+		backdata.concat("#");	  
+      backdata.concat(SectionSelect);
+      Serial.println(backdata);
+		delay(500);
 		goto SELECTBIGIN;	   
       }
         else
