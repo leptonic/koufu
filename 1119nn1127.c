@@ -9,7 +9,7 @@
 //1.9 add #START#//  2018-Jan-02
 //1.92 follow wild wind protocol 13
 #include <SoftwareSerial.h>
-#define VERION    194
+#define VERION    195
 //#define DEBUG 11
 //#define ONLINE_DEBUG 12
 
@@ -27,7 +27,7 @@
 #define GAME_MODE_ERROR    13
 
 #define VOTLAGE_VALUE  292 //351
-#define ADC_GATE_VALUE 300
+#define ADC_GATE_VALUE 400 //before v194 thisis 300
 
 #define R0 3
 #define R1 4
@@ -1263,14 +1263,17 @@ int get_who_is_online()//
   {
     result |= 0x04;
   }
+   delay(10);
   if  (analogRead(A3) > ADC_GATE_VALUE) //left
   {
     result |= 0x08;
   }
+   delay(10);
   if  (analogRead(A5) > ADC_GATE_VALUE) //right
   {
     result |= 0x10;
   }
+  delay(10);
 
   if  (analogRead(A2) > ADC_GATE_VALUE) //behind
   {
