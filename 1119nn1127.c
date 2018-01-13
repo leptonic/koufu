@@ -360,7 +360,7 @@ void II_Play_S6_G4()
 
 void II_Play_S26_Share()//v197
 {
-  II_PlayWave(snd_30, 5000 + ANT_POPC);
+   II_PlayWave(snd_13, 1962 + ANT_POPC);
 }
 
 
