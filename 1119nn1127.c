@@ -8,8 +8,9 @@
 //1.8 ADD RESET CMD for PCB V3
 //1.9 add #START#//  2018-Jan-02
 //1.92 follow wild wind protocol 13
+//1.97 follow share result to wechat protocol 
 #include <SoftwareSerial.h>
-#define VERION    196
+#define VERION    198
 //#define DEBUG 11
 //#define ONLINE_DEBUG 12
 
@@ -47,6 +48,8 @@
 #ifdef ONLINE_DEBUG
 #define PAIRING_TIMEOUT 30000
 #define CONNECT_CHECK_TIMEOUT 500
+#define UP_RESULT_CONNECT_CHECK_TIMEOUT 10000//1500
+#define FORCE_SHARE_INFORMATION_TIMEOUT 60000
 #define TRY_AGAIN_TIMEOUT 5
 #define TRY_AGAIN_TIMEO 36000
 #define RUN_SCRIPT_TIME 10
@@ -54,6 +57,9 @@
 #else
 #define PAIRING_TIMEOUT 30000
 #define CONNECT_CHECK_TIMEOUT 500
+#define UP_RESULT_CONNECT_CHECK_TIMEOUT 10000//1500
+#define FORCE_SHARE_INFORMATION_TIMEOUT 60000
+
 #define TRY_AGAIN_TIMEOUT 15
 #define TRY_AGAIN_TIMEO 36000
 #define RUN_SCRIPT_TIME 90
@@ -352,6 +358,10 @@ void II_Play_S6_G4()
   II_PlayWave(snd_30, 5000 + ANT_POPC);
 }
 
+void II_Play_S26_Share()//v197
+{
+   II_PlayWave(snd_13, 1962 + ANT_POPC);
+}
 
 
 ////////############# Test Function Part
@@ -1625,7 +1635,7 @@ bool bt_upload_data()// 0 means no respond.
   char backrecord[5];
   timeout = 0;
   comdata = "";
-  while (timeout < CONNECT_CHECK_TIMEOUT)
+  while (timeout < UP_RESULT_CONNECT_CHECK_TIMEOUT)
   {
     delay(2);
     timeout++;
@@ -1633,7 +1643,7 @@ bool bt_upload_data()// 0 means no respond.
     {
 
       backdata = "";
-      backdata.concat("@R#");
+      backdata.concat("#R#");//v197
       itoa(total_record, backrecord, 10);
       backdata.concat(backrecord);
       backdata.concat("#");
@@ -1653,10 +1663,55 @@ bool bt_upload_data()// 0 means no respond.
 		comdata = "";
         return true;
       }
+	  else if((comdata[0] == '@') && (comdata[1] == 'S')) // tbd it will be confused with select mode?
+      {
+		comdata = "";
+		return Force_share_information_action();
+      }//v197 add
 
     }
   }
   return false;
+
+
+}
+
+bool Force_share_information_action()// 1 have shared 0 exit //v197 add
+{
+	timeout=0;
+	while(timeout<FORCE_SHARE_INFORMATION_TIMEOUT)
+	{
+		II_Play_S26_Share();
+		delay(2);
+		   timeout++;
+		  
+		   while (Serial.available() > 0)
+		   {
+			 comdata += char(Serial.read());
+			 delay(2);
+		
+		   }
+		   if (comdata.length() > 0)
+		   {
+			 if ((comdata[0] == '@') && (comdata[1] == 'N'))//@NEXT
+			 {
+			   comdata = "";
+			   return true;
+			 }
+			 else if((comdata[0] == '@') && (comdata[1] == 'R')) //@RESET			 	
+			 {
+			      comdata = "";
+			   return false;
+			  
+			 }
+		
+		   }
+
+
+
+	}
+
+	  return false;// over 60s reset
 
 
 }
@@ -1800,7 +1855,11 @@ void begin_traning()
   {
     II_Play_S15_BT_SendOver_dididi();
 
-  };
+  }
+  else
+  {
+   system_reset();
+  }//v197
 
   calc_result();
 
