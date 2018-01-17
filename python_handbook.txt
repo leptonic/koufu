@@ -1,0 +1,88 @@
+//unknown part 
+import numpy as np
+
+
+----------------------------
+====read a picture
+img = cv2.imread("D:\\cat.jpg")
+====wait key input
+cv2.waitKey(0)
+====close windows
+cv2.destroyAllWindows()
+==== get gary photo
+emptyImage3=cv2.cvtColor(img,cv2.COLOR_BGR2GRAY) 
+====write a picture file
+cv2.imwrite("D:\\cat2.jpg", img)
+
+====get blur for reduce noise //max (img,(5,5),0) //ss1 needed
+img2 = cv2.GaussianBlur(img,(3,3),0)
+==ss1==get edge of picture
+canny = cv2.Canny(img, 50, 150)
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>dynamic modfiy the edge for get a good parameters
+import cv2    
+#import numpy as np   
+  
+def CannyThreshold(lowThreshold):    
+    detected_edges = cv2.GaussianBlur(gray,(3,3),0)    
+    detected_edges = cv2.Canny(detected_edges,lowThreshold,lowThreshold*ratio)#,apertureSize = kernel_size)    
+    dst = cv2.bitwise_and(img,img,mask = detected_edges)  # just add some colours to edges from original image.    
+    cv2.imshow('canny demo',dst)    
+    
+lowThreshold = 0    
+max_lowThreshold = 100    
+ratio = 3    
+kernel_size = 3    
+    
+img = cv2.imread("D:\cat.jpg")    
+gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)    
+    
+cv2.namedWindow('canny demo')    
+    
+cv2.createTrackbar('Min threshold','canny demo',lowThreshold, max_lowThreshold, CannyThreshold)    
+    
+CannyThreshold(0)  # initialization    
+if cv2.waitKey(0) == 27:    
+    cv2.destroyAllWindows()    
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>python gui
+from PyQt5 import QtWidgets, QtGui
+import sys
+
+
+from hellow import Ui_Form    # 导入生成form.py里生成的类
+
+class mywindow(QtWidgets.QWidget,Ui_Form):    
+    def __init__(self):    
+        super(mywindow,self).__init__()    
+        self.setupUi(self)
+
+    #定义槽函数
+    def dotest1(self):
+        global CNT
+        CNT +=1
+        cata =0
+        cata =CNT % 2
+        if cata == 0:
+          self.textEdit.setText("Hello World!")
+        else:
+          self.textEdit.setText("Hi Python!")
+        if CNT >20:
+        	CNT=0
+
+
+CNT=0
+app = QtWidgets.QApplication(sys.argv)
+window = mywindow()
+window.show()
+
+sys.exit(app.exec_())
+<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<#
