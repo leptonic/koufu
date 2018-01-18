@@ -1,9 +1,11 @@
 ﻿//kongfu Target Firmware
 //1.7 frequency hopping version
-#define VERISON 185
+//V186 START TO DEBUG WIRELESS V3
+#define VERISON 186
 #define CONFIGRATION 1
 #define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
 #define _DEBUG_SENDER 1
+#define DEBUGMODE 11
 
 #define ZQ_T 'A'
 #define ZQ_O '1'
@@ -19,6 +21,19 @@
 #define XW_O '6'
 
 #define OFF 'X'
+
+#define NAME1_PIN 6
+#define NAME2_PIN 5
+#define NAME3_PIN 4
+
+#define CHANNEL_1_PIN A3
+#define CHANNEL_2_PIN A2
+
+#define BEAT_PIN A5
+#define BATTERY_PIN A7
+#define LED_PIN 9
+#define LED2_PIN 10
+
 
 
 
@@ -125,11 +140,13 @@ void III_Rf_Init()
 
 void setup() {
   // put your setup code here, to run once:
+#ifdef DEBUGMODE 
   Serial.begin(9600);
   Serial.print("Sender "); 
   Serial.print(CONFIGRATION); 
   Serial.print(" ver "); 
   Serial.println(VERISON); 
+#endif
   III_Rf_Init();
   pinMode(3, INPUT);  //TBD
   pinMode(5, OUTPUT); //TBD
@@ -261,6 +278,12 @@ void loop()
   
   //wdt_reset();
  // III_Rf_Init();
+ #ifdef DEBUGMODE
+
+
+
+ 
+ #else // working mode
   if (!Mirf.isSending() && Mirf.dataReady())
   {
   delay(3);
@@ -371,7 +394,7 @@ void loop()
   }
   delay(2);
 //  control_LED(0);// for idle mode
-
+#endif
 }
 
 

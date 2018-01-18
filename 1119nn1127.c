@@ -10,7 +10,7 @@
 //1.92 follow wild wind protocol 13
 //1.97 follow share result to wechat protocol 
 #include <SoftwareSerial.h>
-#define VERION    198
+#define VERION    199
 //#define DEBUG 11
 //#define ONLINE_DEBUG 12
 
@@ -1517,6 +1517,13 @@ bool bt_pairing()// ture connected; false disconnect
 	      continue;
 
 	  }
+	  else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
+	  {
+		  comdata="";
+		  system_reset();
+	      return;
+
+	  }
       else
       {
         comdata = "";
@@ -1559,6 +1566,13 @@ SELECTBIGIN:
         first_talk = 1;
         break;
       }
+	  else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
+	  {
+		  comdata="";
+		  system_reset();
+	      return false;
+
+	  }
       else if ((comdata[0] == '@') && (comdata[1] == 'P'))//V192
       {
 		ID = comdata.substring(3, 9);
@@ -1605,6 +1619,13 @@ SELECTBIGIN:
           Serial.println(backdata);
           return true;
         }
+	   else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
+	  {
+		  comdata="";
+		  system_reset();
+	      return false;
+
+	  }
 	  else if ((comdata[0] == '@') && (comdata[1] == 'P'))//V192
       {
 		ID = comdata.substring(3, 9);
@@ -1668,6 +1689,13 @@ bool bt_upload_data()// 0 means no respond.
 		comdata = "";
 		return Force_share_information_action();
       }//v197 add
+	  else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
+	  {
+		comdata="";
+		system_reset();
+		return false;
+	
+	  }
 
     }
   }
@@ -1815,6 +1843,13 @@ bool bt_upload_state()// 0 means no respond.
 		comdata = "";
         return true;
       }
+	  else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
+	  {
+		  comdata="";
+		  system_reset();
+	      return false;
+
+	  }
 
     }
   }
@@ -2030,6 +2065,13 @@ bool Training_again()
         gSection_Select_outspaker();
         return Training_again_zhuque();
       }
+	  	  else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
+	  {
+		  comdata="";
+		  system_reset();
+	      return false;
+
+	  }
       else
       {
         comdata = "";
