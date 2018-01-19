@@ -1,7 +1,7 @@
 ﻿//kongfu Target Firmware
 //1.7 frequency hopping version
 //V186 START TO DEBUG WIRELESS V3
-#define VERISON 186
+#define VERISON 187
 #define CONFIGRATION 1
 #define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
 #define _DEBUG_SENDER 1
@@ -28,12 +28,24 @@
 
 #define CHANNEL_1_PIN A3
 #define CHANNEL_2_PIN A2
+#define CHANNEL_THRESHOLD_VAULE 100
 
 #define BEAT_PIN A5
+#define BEAT_THRESHOLD_VAULE 100
 #define BATTERY_PIN A7
+#define BATTERY_THRESHOLD_VAULE 100
+
+
 #define LED_PIN 9
 #define LED2_PIN 10
 
+#define NAME_FRONT_ZHUQUE 1
+#define NAME_LEFT_FOOT 2
+#define NAME_RIGHT_FOOT 3
+#define NAME_LEFT_QINGLONG 4
+#define NAME_RIGHT_BAIHU 5
+#define NAME_BEHIND_XUANWU 6
+#define NAME_ERROR 7
 
 
 
@@ -75,6 +87,86 @@ void(* resetFunc) (void) = 0;
 int value;
 int timeout;
 byte data[2];
+int myname;
+int myChannel;
+
+void III_Get_myName()
+{
+	int result;
+		pinMode(NAME1_PIN,INPUT);
+		pinMode(NAME2_PIN,INPUT);
+		pinMode(NAME3_PIN,INPUT);
+	if(digitalRead(NAME1_PIN))
+		result=0x01;
+	else
+		result=0x00;
+	if(digitalRead(NAME2_PIN))
+			result|=0x02;
+	if(digitalRead(NAME3_PIN))
+				result|=0x04;
+#ifdef DEBUGMODE
+Serial.print("pinstate:");
+Serial.println(result);
+#endif
+	switch(result)
+	{
+	case 0:
+		myname=NAME_FRONT_ZHUQUE;
+		break;
+	case 1:
+		myname=NAME_LEFT_FOOT;
+		break;
+	case 2:
+		myname=NAME_RIGHT_FOOT;
+		break;	
+	case 3:
+		myname=NAME_LEFT_QINGLONG;
+		break;
+	case 4:
+		myname=NAME_RIGHT_BAIHU;
+		break;
+	case 5:
+		myname=NAME_BEHIND_XUANWU;
+		break;
+		default:
+		myname=NAME_ERROR;/// need be disposed TBD !!!
+		
+		break;
+	}
+
+    
+}
+
+void III_Get_Channel()
+{
+#ifdef DEBUGMODE
+	int result;
+	result=analogRead(CHANNEL_1_PIN );
+	Serial.print("dbChannel 1:");
+	Serial.println(result);
+	delay(1000);
+	
+	result=analogRead(CHANNEL_2_PIN  );
+	Serial.print("dbChannel 2:");
+	Serial.println(result);
+	delay(1000);
+	
+
+#else
+	int result;
+	if(analogRead(CHANNEL_1_PIN )>CHANNEL_THRESHOLD_VAULE )
+		result=0x01;
+	else
+		result=0x00;
+	
+	if(analogRead(CHANNEL_2_PIN  )>CHANNEL_THRESHOLD_VAULE )
+		result!=0x02;
+	
+	return result;
+#endif
+}
+
+
 
 
 void RF_24L01_Init()
@@ -196,7 +288,7 @@ void rf_Send_key()
   //}
 
 }
-bool ADC_check() // false means low power
+bool III_Get_Battery_State() // false means low power
 {
 #ifdef _DEBUG_LOWPOWER
 #if _DEBUG_LOWPOWER == 1
@@ -206,12 +298,16 @@ bool ADC_check() // false means low power
 #endif
 #endif
   int valb;
-  valb = analogRead(A7);
+  valb = analogRead(BATTERY_PIN );
+ #ifdef DEBUGMODE
+  Serial.print("Batter ADC:");
+  Serial.println(valb);
+ #endif
   delay(200);
-  if (valb <= 292)
+  if (valb <= BATTERY_THRESHOLD_VAULE )
   {
-    valb = analogRead(A7);
-    if (valb <= 292)
+    valb = analogRead(BATTERY_PIN );
+    if (valb <= BATTERY_THRESHOLD_VAULE )
     {
       return false;
     }
@@ -221,27 +317,81 @@ bool ADC_check() // false means low power
   else return true;
 
 }
-void control_LED(bool sw)
+void III_Control_LED(bool sw)
 {
   if (sw)
   {
     //Trun on
-    digitalWrite(5, HIGH);
+    digitalWrite(LED_PIN , HIGH);
   }
   else
   {
     //Trun off
-    digitalWrite(5, LOW);
+    digitalWrite(LED_PIN, LOW);
   }
+
+}
+void III_Control_LED2(bool sw)
+{
+  if (sw)
+  {
+    //Trun on
+    digitalWrite(LED2_PIN , HIGH);
+  }
+  else
+  {
+    //Trun off
+    digitalWrite(LED2_PIN, LOW);
+  }
+
+}
+void II_Blink_LED()
+{
+int fi;
+for(fi=0;fi<3;fi++)
+{
+    III_Control_LED(1);
+	delay(500);
+	III_Control_LED(0);
+	delay(300);
+	III_Control_LED(1);
+	delay(500);
+	III_Control_LED(0);
+	delay(200);
+	III_Control_LED(1);
+	delay(500);
+	III_Control_LED(0);
+	delay(100);
+}
+	III_Get_myName();
+	if(myname==NAME_ERROR)
+	{
+	II_Blink_LED();
+	}
+
+}
+bool III_Get_KeyState()
+{
+	int result;
+	result=analogRead(BEAT_PIN);
+#ifdef DEBUGMODE
+	Serial.print("get key state :");
+	Serial.println(result);
+#endif
+
+	if(result>BEAT_THRESHOLD_VAULE)
+		return true;
+	else
+		return false;
 
 }
 bool get_key()
 {
   bool sre;
-  if (digitalRead(3) == HIGH)
+  if ( III_Get_KeyState())
   {
     delay(150);
-    if (digitalRead(3) == HIGH)
+    if ( III_Get_KeyState())
     {
       sre = true;
     }
@@ -255,24 +405,70 @@ bool get_key()
 void run_training()
 {
   int timeout;
-  control_LED(1);
+  III_Control_LED(1);
   delay(3);
   timeout = 0;
   while (timeout < 199)
   {
     if (get_key())
     {
-      control_LED(0);
+      III_Control_LED(0);
       rf_Send_key();
     break;
     }
     timeout++;
     delay(5);
   }
-  control_LED(0);
+  III_Control_LED(0);
 
 }
+void _test()
+{
 
+	
+	int _ii;
+//	 Serial.println("==1st test item get name==");
+//		for(_ii=0;_ii<6;_ii++)
+//		{
+//			III_Get_myName();
+//			if(myname==NAME_ERROR)
+//				II_Blink_LED();
+//			Serial.print(_ii);
+//				Serial.print(" NAME:");
+//				Serial.println(myname);		
+//				delay(1000);
+//		}	
+	 Serial.println("==Next test item get channel==");
+		for(_ii=0;_ii<5;_ii++)
+		{
+		 III_Get_Channel();
+		 delay(1000);
+		}
+			
+//	 Serial.println("==Next test item LED state==");
+//		for(_ii=0;_ii<2;_ii++)
+//		{
+//		III_Control_LED(1);
+//		III_Control_LED2(1);
+//		delay(1000);
+//		III_Control_LED(0);
+//		III_Control_LED2(0);
+//		delay(1000);
+//		}
+//	 Serial.println("==Next test item ADC state==");
+//		for(_ii=0;_ii<50;_ii++)
+//		{
+//	 	III_Get_Battery_State();
+//		delay(100);
+//		}
+//	 Serial.println("==Next test item key state==");
+//		for(_ii=0;_ii<50;_ii++)
+//		{
+//	 	III_Get_KeyState();
+//		delay(200);
+//		}
+
+}
 void loop()
 {
   
@@ -280,8 +476,7 @@ void loop()
  // III_Rf_Init();
  #ifdef DEBUGMODE
 
-
-
+_test();
  
  #else // working mode
   if (!Mirf.isSending() && Mirf.dataReady())
@@ -321,7 +516,7 @@ void loop()
 
 //      if (data[1] == KEY_BIT)
       {
-        control_LED(1);
+        III_Control_LED(1);
       }
 
     }
@@ -330,7 +525,7 @@ void loop()
 
 //      if (data[1] == KEY_BIT)
       {
-        control_LED(0);
+        III_Control_LED(0);
       }
 
     }
@@ -341,9 +536,9 @@ void loop()
       if ((char)data[1] == KEY_BIT)
       {
         char sd[2];
-        control_LED(1);
+        III_Control_LED(1);
         sd[0] = '$';
-        if (!ADC_check())
+        if (!III_Get_Battery_State())
         {
           sd[1] = 'L';
         }
@@ -369,7 +564,7 @@ void loop()
         }
       
          
-          control_LED(0);
+          III_Control_LED(0);
 
       }
     }// +++
@@ -383,7 +578,7 @@ void loop()
 #ifdef _DEBUG_SENDER
       Serial.println(KEY_BIT);
 #endif
-      control_LED(0);
+      III_Control_LED(0);
   //  III_Rf_Init();
       rf_Send_key();
     // III_Rf_Init();
@@ -393,7 +588,7 @@ void loop()
 
   }
   delay(2);
-//  control_LED(0);// for idle mode
+//  III_Control_LED(0);// for idle mode
 #endif
 }
 
