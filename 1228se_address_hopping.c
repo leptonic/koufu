@@ -93,9 +93,9 @@ int myChannel;
 void III_Get_myName()
 {
 	int result;
-		pinMode(NAME1_PIN,INPUT);
-		pinMode(NAME2_PIN,INPUT);
-		pinMode(NAME3_PIN,INPUT);
+		pinMode(NAME1_PIN,INPUT_PULLUP);
+		pinMode(NAME2_PIN,INPUT_PULLUP);
+		pinMode(NAME3_PIN,INPUT_PULLUP);
 	if(digitalRead(NAME1_PIN))
 		result=0x01;
 	else
@@ -105,8 +105,8 @@ void III_Get_myName()
 	if(digitalRead(NAME3_PIN))
 				result|=0x04;
 #ifdef DEBUGMODE
-Serial.print("pinstate:");
-Serial.println(result);
+//Serial.print("pinstate:");
+//Serial.println(result);
 #endif
 	switch(result)
 	{
@@ -125,13 +125,11 @@ Serial.println(result);
 	case 4:
 		myname=NAME_RIGHT_BAIHU;
 		break;
-	case 5:
+	default:
 		myname=NAME_BEHIND_XUANWU;
 		break;
-		default:
-		myname=NAME_ERROR;/// need be disposed TBD !!!
-		
-		break;
+	
+	
 	}
 
     
@@ -364,10 +362,10 @@ for(fi=0;fi<3;fi++)
 	delay(100);
 }
 	III_Get_myName();
-	if(myname==NAME_ERROR)
-	{
-	II_Blink_LED();
-	}
+//	if(myname==NAME_ERROR)
+//	{
+//	II_Blink_LED();
+//	}
 
 }
 bool III_Get_KeyState()
@@ -431,8 +429,7 @@ void _test()
 //		for(_ii=0;_ii<6;_ii++)
 //		{
 //			III_Get_myName();
-//			if(myname==NAME_ERROR)
-//				II_Blink_LED();
+
 //			Serial.print(_ii);
 //				Serial.print(" NAME:");
 //				Serial.println(myname);		
@@ -444,7 +441,7 @@ void _test()
 		 III_Get_Channel();
 		 delay(1000);
 		}
-			
+//			
 //	 Serial.println("==Next test item LED state==");
 //		for(_ii=0;_ii<2;_ii++)
 //		{
