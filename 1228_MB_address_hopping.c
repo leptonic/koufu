@@ -85,7 +85,7 @@
 
 //#include <Keypad.h>
 
-SoftwareSerial ss(6, 9);
+SoftwareSerial ss(9,6);
 //byte rowPins[3] = {3, 4, 5}; //connect to the row pinouts of the keypad
 //byte colPins[3] = {11, 12, 7}; //connect to the column pinouts of the keypad
 //char hexaKeys[3][3] = {{'1', '2', '3'}, {'4', '5', '6'}, {'7', '8', '9'}}; // the key value  NEED MODFIY BY SETUP
@@ -2506,21 +2506,29 @@ void _test()
 //v2_Get_Channel_Switch_debug();
 //delay(2000);
 
+#if 1
+set_volume();
+
 Serial.println("==SoundCard TEST");
 III_AMP(true);
 
 II_PlayWave(snd_1,200);
 II_PlayWave(snd_2,200);
+delay(2000);
 III_AMP(false);
+II_PlayWave(snd_1,200);
+II_PlayWave(snd_2,200);
 
-II_PlayWave(snd_3,2000 + ANT_POPC);
-III_AMP(false);
+//III_AMP(false);
 
-II_PlayWave(snd_3,2000 + ANT_POPC);
+//II_PlayWave(snd_3,2000 + ANT_POPC);
+//III_AMP(false);
+
+//II_PlayWave(snd_3,2000 + ANT_POPC);
 
 
 delay(2000);
-
+#endif
 
 //=============test beats
 //run_Script_test();
