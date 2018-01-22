@@ -5,7 +5,7 @@
 #define CONFIGRATION 1
 #define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
 #define _DEBUG_SENDER 1
-//#define DEBUGMODE 11
+#define DEBUGMODE 11
 
 #define ZQ_T 'A'
 #define ZQ_O '1'
