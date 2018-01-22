@@ -15,7 +15,7 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-#define VERION    218
+#define VERION    219
 #define DEBUG 11
 #define ONLINE_DEBUG 12
 #define STEP2STEP_DEBUG 13
@@ -40,6 +40,7 @@
 
 #define AMP 4 //A0
 #define BTP 15 //A1
+#define V3V 3 //A1
 
 
 #define ANT_POPA 300
@@ -168,9 +169,15 @@ void III_AMP(bool sw)
 }
 void III_BT(bool sw)
 {
-  digitalWrite(BTP, !sw);
+  pinMode(V3V,OUTPUT);
+  digitalWrite(V3V, !sw);
 }
 
+void III_3v3(bool sw)
+{
+  pinMode(V3V,OUTPUT);
+  digitalWrite(V3V, !sw);
+}
 
 //byte snd_car_abnormal[6] = {0xAA, 0x07, 0x02, 0x00, 0x05, 0xB8};// Car abnormal
 //byte snd_batterylow[6] = {0xAA, 0x07, 0x02, 0x00, 0x06, 0xB9};// battery low
@@ -1551,15 +1558,16 @@ int get_who_is_online()//
       //RF_24L01_address_Hopping(i);
 	  delay(100);
       timeout = 0;
-//	   Serial.print("s");
+	   Serial.print("s");
 	  III_Rf_Init(0);
+	   Serial.print("s1");
 	  while(Mirf.isSending()&&!Mirf.dataReady()&&timeout <200)
 	  	{
 	  	timeout++;
          delay(20);
 	  	}
 //	  if(timeout>200)
-//	  	 Serial.print("B");
+	  	 Serial.print("B");
 	  w_Send_oneSignal(CK, i);// Direct bit target
 //	   Serial.println(i);
      // delay(i*10);
@@ -2426,8 +2434,9 @@ void setup() {
 //  pinMode(BTP, OUTPUT);
 //  III_AMP(1);
 //  III_BT(1);
+	III_3v3(1);
 
-  set_volume();
+//  set_volume();
 
 
 
@@ -2475,11 +2484,24 @@ void _test()
 //=========test who is online
 
 //  String backdata = "";	
- //   Serial.println("start check who is online");
+//   Serial.println("start check who is online");
 //	   SectionSelect = get_who_is_online();
 //	 backdata.concat("#");
 //		  backdata.concat(SectionSelect);
 //		  Serial.println(backdata);
+pinMode(10,OUTPUT);
+digitalWrite(10,HIGH);
+while (Serial.available() > 0)
+   {
+	 comdata += char(Serial.read());
+	 delay(2);
+
+   }
+   if (comdata.length() > 0)
+   {
+   digitalWrite(10,LOW);
+   delay(3000);
+   	}
 
 //test_all_target();
 
@@ -2506,7 +2528,7 @@ void _test()
 //v2_Get_Channel_Switch_debug();
 //delay(2000);
 
-#if 1
+#if 0
 set_volume();
 
 Serial.println("==SoundCard TEST");

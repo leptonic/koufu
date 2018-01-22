@@ -41,6 +41,7 @@
 
 #define AMP 4 //A0
 #define BTP 15 //A1
+#define V3V 3 //A1
 
 
 #define ANT_POPA 300
@@ -91,7 +92,7 @@
 
 //#include <Keypad.h>
 
-SoftwareSerial ss(6, 9);
+SoftwareSerial ss(9,6);
 //byte rowPins[3] = {3, 4, 5}; //connect to the row pinouts of the keypad
 //byte colPins[3] = {11, 12, 7}; //connect to the column pinouts of the keypad
 //char hexaKeys[3][3] = {{'1', '2', '3'}, {'4', '5', '6'}, {'7', '8', '9'}}; // the key value  NEED MODFIY BY SETUP
@@ -150,6 +151,7 @@ String ID = "";
 bool gSilence_Mode;
 byte data[2];
 byte Channel;
+int myChannel;
 
 void(* resetFunc) (void) = 0;
 void bt_Throwout_Error_withoutack();
@@ -174,9 +176,15 @@ void III_AMP(bool sw)
 }
 void III_BT(bool sw)
 {
-  digitalWrite(BTP, !sw);
+  pinMode(V3V,OUTPUT);
+  digitalWrite(V3V, !sw);
 }
 
+void III_3v3(bool sw)
+{
+  pinMode(V3V,OUTPUT);
+  digitalWrite(V3V, !sw);
+}
 
 //byte snd_car_abnormal[6] = {0xAA, 0x07, 0x02, 0x00, 0x05, 0xB8};// Car abnormal
 //byte snd_batterylow[6] = {0xAA, 0x07, 0x02, 0x00, 0x06, 0xB9};// battery low
@@ -1758,13 +1766,21 @@ void RF_24L01_Init()
 {
 
 
-  Mirf.spi = &MirfHardwareSpi;
-  Mirf.init();
-  Mirf.setRADDR((byte *)"LAVAJ"); //设置自己的地址（发送端地址），使用5个字符
-  Mirf.payload = sizeof(data);
-  Mirf.channel = BASE_FREQUNCY;          //设置所用信道
-  Mirf.config();
-  Mirf.configRegister(RF_SETUP,SPEED_DATA_RATES);
+	 Mirf.spi = &MirfHardwareSpi;
+	  Mirf.init();
+	  Mirf.setRADDR((byte *)"LAVAJ"); //设置自己的地址（发送端地址），使用5个字符
+	  Mirf.payload = sizeof(data);
+	//	Mirf.channel = 90-CONFIGRATION*15;			//设置所用信道
+#ifndef DEBUG // working mode
+	  myChannel= III_Get_Channel();
+	
+	  Mirf.channel = BASE_FREQUNCY-myChannel*20;	  
+#else //Debug Mode
+	  Mirf.channel = BASE_FREQUNCY; 	 
+	
+#endif
+	  Mirf.config();
+	  Mirf.configRegister(RF_SETUP,SPEED_DATA_RATES);
 
 }
 void RF_24L01_Frequency_Hopping(int channel)//channel must from 1-6 !!

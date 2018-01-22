@@ -5,7 +5,7 @@
 #define CONFIGRATION 1
 #define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
 #define _DEBUG_SENDER 1
-#define DEBUGMODE 11
+//#define DEBUGMODE 11
 
 #define ZQ_T 'A'
 #define ZQ_O '1'
@@ -135,7 +135,7 @@ void III_Get_myName()
     
 }
 
-void III_Get_Channel()
+int III_Get_Channel()
 {
 #ifdef DEBUGMODE
 	int result;
@@ -176,8 +176,14 @@ void RF_24L01_Init()
   Mirf.setRADDR((byte *)"LAVAJ"); //设置自己的地址（发送端地址），使用5个字符
   Mirf.payload = sizeof(data);
 //  Mirf.channel = 90-CONFIGRATION*15;          //设置所用信道
-  Mirf.channel = BASE_FREQUNCY;      //设置所用信道
+#ifndef DEBUGMODE // working mode
+  myChannel= III_Get_Channel();
 
+  Mirf.channel = BASE_FREQUNCY-myChannel*20;      
+#else
+  Mirf.channel = BASE_FREQUNCY; 	 
+
+#endif
   Mirf.config();
   Mirf.configRegister(RF_SETUP,SPEED_DATA_RATES);
 
@@ -438,7 +444,7 @@ void _test()
 	 Serial.println("==Next test item get channel==");
 		for(_ii=0;_ii<5;_ii++)
 		{
-		 III_Get_Channel();
+		myChannel= III_Get_Channel();
 		 delay(1000);
 		}
 //			
