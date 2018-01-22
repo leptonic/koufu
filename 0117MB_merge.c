@@ -16,7 +16,7 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-#define VERION    219
+#define VERION    220
 #define DEBUG 11
 #define ONLINE_DEBUG 12
 #define STEP2STEP_DEBUG 13
@@ -34,8 +34,7 @@
 #define GAME_MODE_ROUND   11
 #define GAME_MODE_ERROR    13
 
-#define VOTLAGE_VALUE  292 //351
-#define ADC_GATE_VALUE 300
+
 #define BASE_FREQUNCY   90
 #define SPEED_DATA_RATES 0x0e// 0x06 7 1M 0x0f 2M 
 
@@ -59,6 +58,14 @@
 #define SW_A3  100
 #define SW_A4  100
 
+#define CHANNEL_1_PIN A3
+#define CHANNEL_2_PIN A2
+#define CHANNEL_THRESHOLD_VAULE 100
+
+#define BEAT_PIN A5
+#define BEAT_THRESHOLD_VAULE 100
+#define BATTERY_PIN A7
+#define BATTERY_THRESHOLD_VAULE 100
 
 
 
@@ -150,7 +157,7 @@ String comdata = "";
 String ID = "";
 bool gSilence_Mode;
 byte data[2];
-byte Channel;
+
 int myChannel;
 
 void(* resetFunc) (void) = 0;
@@ -172,18 +179,73 @@ void system_reset()
 }
 void III_AMP(bool sw)
 {
+  pinMode(AMP,OUTPUT);
   digitalWrite(AMP, sw);
 }
+bool III_Get_Battery_State() // false means low power
+{
+
+  int valb;
+  valb = analogRead(BATTERY_PIN );
+ #ifdef DEBUG
+  Serial.print("Batter ADC:");
+  Serial.println(valb);
+ #endif
+  delay(200);
+  if (valb <= BATTERY_THRESHOLD_VAULE )
+  {
+  delay(499);
+    valb = analogRead(BATTERY_PIN );
+    if (valb <= BATTERY_THRESHOLD_VAULE )
+    {
+      return false;
+    }
+    else return true;
+
+  }
+  else return true;
+
+}
+
+
 void III_BT(bool sw)
 {
   pinMode(V3V,OUTPUT);
   digitalWrite(V3V, !sw);
 }
 
-void III_3v3(bool sw)
+void III_3v3(bool sw)// rf reset
 {
   pinMode(V3V,OUTPUT);
   digitalWrite(V3V, !sw);
+}
+int III_Get_Channel()
+{
+#ifdef DEBUG
+	int result;
+	result=analogRead(CHANNEL_1_PIN );
+	Serial.print("dbChannel 1:");
+	Serial.println(result);
+	delay(1000);
+	
+	result=analogRead(CHANNEL_2_PIN  );
+	Serial.print("dbChannel 2:");
+	Serial.println(result);
+	delay(1000);
+	
+
+#else
+	int result;
+	if(analogRead(CHANNEL_1_PIN )>CHANNEL_THRESHOLD_VAULE )
+		result=0x01;
+	else
+		result=0x00;
+	
+	if(analogRead(CHANNEL_2_PIN  )>CHANNEL_THRESHOLD_VAULE )
+		result!=0x02;
+	
+	return result;
+#endif
 }
 
 //byte snd_car_abnormal[6] = {0xAA, 0x07, 0x02, 0x00, 0x05, 0xB8};// Car abnormal
@@ -661,90 +723,7 @@ void  III_Switch_LED(bool sw, int i)
   else
     w_Send_oneSignal(LOFF, i);
 }
-void v2_GreenLED(bool sw)
-{
-pinMode(15,OUTPUT);
-if(sw)
-//	analogWrite(A1,255);
-   digitalWrite(15,HIGH);
-else
-//	analogWrite(A1,0);
-digitalWrite(15,LOW);
 
-}
-
-void v2_Get_Channel_Switch()
-{
-	Channel=0;
-	
-	if(analogRead(A2)>SW_A2)
-	{
-		delay(79);
-		if(analogRead(A2)>SW_A2)
-		{
-			delay(99);
-            if(analogRead(A2)>SW_A2)
-			{			
-			Channel = 0x01;
-			}
-
-		}
-			
-	}
-		
-	if(analogRead(A3)>SW_A3)
-	{
-		delay(89);
-		if(analogRead(A3)>SW_A3)
-		{
-			delay(89);
-			if(analogRead(A3)>SW_A3)
-			{
-			  Channel |= 0x02;
-			}
-		 
-		}
-
-	}
-		
-	if(analogRead(A4)>SW_A4)
-	{
-		delay(99);
-		if(analogRead(A4)>SW_A4)
-		{
-			delay(79);
-			if(analogRead(A4)>SW_A4)
-			{
-			
-			  Channel |= 0x04;
-			}
-			
-		}
-		
-	}
-		
-}
-
-void v2_Get_Channel_Switch_debug()
-{
-	int result;
-	result=analogRead(A2);
-	Serial.print("A2:");
-	Serial.println(result);
-	delay(100);
-
-	result=analogRead(A3);
-	Serial.print("A3:");
-	Serial.println(result);
-	delay(100);
-
-	
-	result=analogRead(A4);
-	Serial.print("A4:");
-	Serial.println(result);
-	delay(100);
-
-}
 
 void RF_test_receive_data()
 {
@@ -855,77 +834,6 @@ void run_Script_test()
   // set_playover();
   //  delay(100);
   // set_volume_silence();
-
-}
-
-void plug_test_getvalue()
-{
-  SectionSelect = get_who_is_online();
-  Serial.println(SectionSelect);
-  delay(3000);
-
-}
-void Plug_test()
-{
-  // byte state = (byte)get_who_is_online();
-  // if command over state than report error to app and set state as real state.
-  int a_result;
-  Serial.print("A7:");
-  a_result = analogRead(A7);
-  if (a_result > ADC_GATE_VALUE)
-  {
-    II_Play_foot_L();
-  }
-
-  delay(500);
-  Serial.println(a_result);
-  Serial.print("A2:");
-  a_result = analogRead(A2);
-  if (a_result > ADC_GATE_VALUE)
-  {
-    II_Play_backward();
-  }
-  delay(500);
-  Serial.println(a_result);
-  Serial.print("A3:");
-  a_result = analogRead(A3);
-  if (a_result > ADC_GATE_VALUE)
-  {
-    II_Play_leftward();
-  }
-  delay(500);
-  Serial.println(a_result);
-  Serial.print("A4:");
-  a_result = analogRead(A4);
-  if (a_result > ADC_GATE_VALUE)
-  {
-    II_Play_foot_R();
-  }
-  delay(500);
-  Serial.println(a_result);
-  Serial.print("A5:");
-  a_result = analogRead(A5);
-  if (a_result > ADC_GATE_VALUE)
-  {
-    II_Play_rightward();
-  }
-  delay(500);
-  Serial.println(a_result);
-  Serial.print("A6:");
-  a_result = analogRead(A6);
-  if (a_result > ADC_GATE_VALUE)
-  {
-    II_Play_forward();
-
-  }
-  delay(500);
-  Serial.println(a_result);
-
-
-  //
-
-
-
 
 }
 
@@ -2561,13 +2469,7 @@ void setup() {
   Serial.println("KongFu DebugMode");
   Serial.print("--------Ver");
   Serial.println(VERION);
-  //Serial.println("LED ALL ON");
-  //Serial.println("BLUETOOTH DEBUG");
-  // Serial.println("SOUND ALL PLAY");
-  // Serial.println("PLUG IN TEST");
-  //Serial.println("LED MATRIX TEST");
-  //Serial.println("key board TEST");
-  //Serial.println("first sndtest TEST");
+
 #endif
 
   //== TBD  2017-Dec-30
@@ -2576,7 +2478,7 @@ void setup() {
 //  III_AMP(1);
 //  III_BT(1);
 
-  set_volume();
+//  set_volume();
 
 
 
@@ -2656,27 +2558,44 @@ void _test()
 //v2_Get_Channel_Switch_debug();
 //delay(2000);
 
-Serial.println("==SoundCard TEST");
-III_AMP(true);
+//Serial.println("==SoundCard TEST");
+//III_AMP(true);
 
-II_PlayWave(snd_1,200);
-II_PlayWave(snd_2,200);
-III_AMP(false);
+//II_PlayWave(snd_1,200);
+//II_PlayWave(snd_2,200);
+//III_AMP(false);
 
-II_PlayWave(snd_3,2000 + ANT_POPC);
-III_AMP(false);
+//II_PlayWave(snd_3,2000 + ANT_POPC);
+//III_AMP(false);
 
-II_PlayWave(snd_3,2000 + ANT_POPC);
+//II_PlayWave(snd_3,2000 + ANT_POPC);
 
 
-delay(2000);
+//delay(2000);
 
 
 //=============test beats
 //run_Script_test();
 //delay(5000);
 
+///===========test bluetooth
+//III_BT(1);
 
+//    while (Serial.available() > 0)
+//    {
+//      comdata += char(Serial.read());
+//      delay(2);
+
+//    }
+//    if (comdata.length() > 0)
+//    {
+//    	Serial.println("got data! ");
+//		Serial.println(comdata);
+//		comdata="";
+//    }
+
+//========test channel select
+	III_Get_Channel();
 
 }
 
@@ -2684,22 +2603,6 @@ void loop() {
 
 #ifdef DEBUG   ///>>>>DEBUG MODE
 
-  //LED_All_ON_first();
-  // Bluetooth_test();
-  //DEBUG_sndtest();
-  // II_Play_levelE();
-  //Plug_test();
-  //plug_test_getvalue();
-  //LED_Matrix_test();
-  //  run_Script_test();
-  //SectionSelect=0x01;
-  //test_all_target();
-  //run_Script(20);
-  // RF_test_receive_data();
-  //delay(5000);
-  // key_test();
-  // delay(500);
-  //first_sndtest_debug();
   _test();
   // delay(5000);
 
