@@ -1,11 +1,14 @@
 ﻿//kongfu Target Firmware
 //1.7 frequency hopping version
 //V186 START TO DEBUG WIRELESS V3
-#define VERISON 187
-#define CONFIGRATION 1
+//v188 ONLY for first debug MB 
+#define VERISON 188
+//#define CONFIGRATION 1
 #define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
-#define _DEBUG_SENDER 1
-#define DEBUGMODE 11
+//#define _DEBUG_SENDER 1
+//#define DEBUGMODE 11
+#define _DEBUG_ONLINE 10
+#define _DBG_STATIC_FREQNCY 12
 
 #define ZQ_T 'A'
 #define ZQ_O '1'
@@ -28,12 +31,12 @@
 
 #define CHANNEL_1_PIN A3
 #define CHANNEL_2_PIN A2
-#define CHANNEL_THRESHOLD_VAULE 100
+#define CHANNEL_THRESHOLD_VAULE 50
 
 #define BEAT_PIN A5
 #define BEAT_THRESHOLD_VAULE 100
 #define BATTERY_PIN A7
-#define BATTERY_THRESHOLD_VAULE 100
+#define BATTERY_THRESHOLD_VAULE 640//2v
 
 
 #define LED_PIN 9
@@ -181,12 +184,16 @@ void RF_24L01_Init()
   Mirf.setRADDR((byte *)"LAVAJ"); //设置自己的地址（发送端地址），使用5个字符
   Mirf.payload = sizeof(data);
 //  Mirf.channel = 90-CONFIGRATION*15;          //设置所用信道
-#ifndef DEBUGMODE // working mode
-  myChannel= III_Get_Channel();
-
-  Mirf.channel = BASE_FREQUNCY-myChannel*20;      
+#ifndef _DBG_STATIC_FREQNCY 
+  Mirf.channel = BASE_FREQUNCY; 
 #else
-  Mirf.channel = BASE_FREQUNCY; 	 
+   myChannel= III_Get_Channel();
+  Mirf.channel = BASE_FREQUNCY-myChannel*20;      
+#ifdef _DEBUG_ONLINE
+  Serial.print("Channel:");
+  Serial.println(Mirf.channel);
+
+#endif
 
 #endif
   Mirf.config();
@@ -240,6 +247,10 @@ void III_Rf_Init()
 void III_Set_name()
 {
 	III_Get_myName();
+#ifdef _DEBUG_ONLINE
+   Serial.print("myname:");
+   Serial.println(myname);
+#endif
 	switch(myname)
 	{
 	case 1:
@@ -283,9 +294,10 @@ void setup() {
 #endif
   III_Set_name();
   III_Rf_Init();
-  pinMode(3, INPUT);  //TBD
-  pinMode(5, OUTPUT); //TBD
- 
+  pinMode(LED_PIN,OUTPUT);
+  pinMode(LED2_PIN,OUTPUT);
+
+  III_Control_LED(0);
  // wdt_enable(TIMEOUT);
   // attachInterrupt(0, Receive, FALLING);
 }
@@ -480,12 +492,12 @@ void _test()
 //				Serial.println(myname);		
 //				delay(1000);
 //		}	
-	 Serial.println("==Next test item get channel==");
-		for(_ii=0;_ii<5;_ii++)
-		{
-		myChannel= III_Get_Channel();
-		 delay(1000);
-		}
+//	 Serial.println("==Next test item get channel==");
+//		for(_ii=0;_ii<5;_ii++)
+//		{
+//		myChannel= III_Get_Channel();
+//		 delay(1000);
+//		}
 //			
 //	 Serial.println("==Next test item LED state==");
 //		for(_ii=0;_ii<2;_ii++)
@@ -509,6 +521,8 @@ void _test()
 //	 	III_Get_KeyState();
 //		delay(200);
 //		}
+	III_Get_Battery_State();
+delay(1000);
 
 }
 void loop()
