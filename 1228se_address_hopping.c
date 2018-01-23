@@ -49,25 +49,27 @@
 
 
 
-#if CONFIGRATION == 1
-#define CHECK_BIT ZQ_T
-#define KEY_BIT ZQ_O
-#elif CONFIGRATION == 2
-#define CHECK_BIT ZT_T
-#define KEY_BIT ZT_O
-#elif CONFIGRATION == 3
-#define CHECK_BIT YT_T
-#define KEY_BIT YT_O
-#elif CONFIGRATION == 4
-#define CHECK_BIT QL_T
-#define KEY_BIT QL_O
-#elif CONFIGRATION == 5
-#define CHECK_BIT BH_T
-#define KEY_BIT BH_O
-#elif CONFIGRATION == 6
-#define CHECK_BIT XW_T
-#define KEY_BIT XW_O
-#endif
+//#if CONFIGRATION == 1
+//#define CHECK_BIT ZQ_T
+//#define KEY_BIT ZQ_O
+//#elif CONFIGRATION == 2
+//#define CHECK_BIT ZT_T
+//#define KEY_BIT ZT_O
+//#elif CONFIGRATION == 3
+//#define CHECK_BIT YT_T
+//#define KEY_BIT YT_O
+//#elif CONFIGRATION == 4
+//#define CHECK_BIT QL_T
+//#define KEY_BIT QL_O
+//#elif CONFIGRATION == 5
+//#define CHECK_BIT BH_T
+//#define KEY_BIT BH_O
+//#elif CONFIGRATION == 6
+//#define CHECK_BIT XW_T
+//#define KEY_BIT XW_O
+//#endif
+
+
 
 #define VOTLAGE_VALUE  292
 #define BASE_FREQUNCY   90
@@ -89,6 +91,9 @@ int timeout;
 byte data[2];
 int myname;
 int myChannel;
+
+char CHECK_BIT;
+char KEY_BIT;
 
 void III_Get_myName()
 {
@@ -191,36 +196,35 @@ void RF_24L01_Init()
 void RF_24L01_ah_Init()//channel must from 1-6 !!
 {
 
-  Mirf.spi = &MirfHardwareSpi;
-  Mirf.init();
-  switch((int) CONFIGRATION)
-  {
-  case 1:   
-    Mirf.setRADDR((byte *)"LAVAJ1");
-    break;
-  
-  case 2:   
-    Mirf.setRADDR((byte *)"LAVAJ2");
-    break;
-  
-  case 3:   
-    Mirf.setRADDR((byte *)"LAVAJ3");
-    break;
-  
-  case 4:   
-    Mirf.setRADDR((byte *)"LAVAJ4");
-    break;
-  
-  case 5:   
-    Mirf.setRADDR((byte *)"LAVAJ5");
-    break;
-  
-  default:    
-    Mirf.setRADDR((byte *)"LAVAJ6");
-    break;
-              
-
-  }
+//  Mirf.spi = &MirfHardwareSpi;
+//  Mirf.init();
+//  switch((int) CONFIGRATION)
+//  {
+//  case 1:   
+//    Mirf.setRADDR((byte *)"LAVAJ1");
+//    break;
+//  
+//  case 2:   
+//    Mirf.setRADDR((byte *)"LAVAJ2");
+//    break;
+//  
+//  case 3:   
+//    Mirf.setRADDR((byte *)"LAVAJ3");
+//    break;
+//  
+//  case 4:   
+//    Mirf.setRADDR((byte *)"LAVAJ4");
+//    break;
+//  
+//  case 5:   
+//    Mirf.setRADDR((byte *)"LAVAJ5");
+//    break;
+//  
+//  default:    
+//    Mirf.setRADDR((byte *)"LAVAJ6");
+//    break;
+//              
+//  }
 //  Mirf.setRADDR((byte *)"LAVAJ"); 
   Mirf.payload = sizeof(data);
   Mirf.channel = BASE_FREQUNCY;          //设置所用信道
@@ -233,16 +237,51 @@ void III_Rf_Init()
   RF_24L01_Init();
 
 }
+void III_Set_name()
+{
+	III_Get_myName();
+	switch(myname)
+	{
+	case 1:
+		CHECK_BIT =ZQ_T;
+        KEY_BIT=ZQ_O;
+	break;
+	case 2:
+		CHECK_BIT =ZT_T;
+        KEY_BIT=ZT_O;
+	break;
+	case 3:
+		CHECK_BIT =YT_T;
+        KEY_BIT=YT_O;
+	break;
+	case 4:
+		CHECK_BIT =QL_T;
+        KEY_BIT=QL_O;
+	break;
+	case 5:
+		CHECK_BIT =BH_T;
+        KEY_BIT=BH_O;
+	break;
+	
+	case 6:
+		CHECK_BIT =XW_T;
+        KEY_BIT=XW_O;
+	break;
 
+	}
+
+
+}
 void setup() {
   // put your setup code here, to run once:
 #ifdef DEBUGMODE 
   Serial.begin(9600);
-  Serial.print("Sender "); 
-  Serial.print(CONFIGRATION); 
+//  Serial.print("Sender "); 
+//  Serial.print(CONFIGRATION); 
   Serial.print(" ver "); 
   Serial.println(VERISON); 
 #endif
+  III_Set_name();
   III_Rf_Init();
   pinMode(3, INPUT);  //TBD
   pinMode(5, OUTPUT); //TBD
