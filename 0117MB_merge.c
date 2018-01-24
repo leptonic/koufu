@@ -16,10 +16,12 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-#define VERION    220
+#define VERION    222
 #define DEBUG 11
 #define ONLINE_DEBUG 12
 #define STEP2STEP_DEBUG 13
+#define _DBG_STATIC_FREQNCY  15
+
 
 #define STATE_TRAINNING 1
 #define STATE_IDEA      2
@@ -60,12 +62,11 @@
 
 #define CHANNEL_1_PIN A3
 #define CHANNEL_2_PIN A2
-#define CHANNEL_THRESHOLD_VAULE 100
+#define CHANNEL_THRESHOLD_VAULE 50
 
-#define BEAT_PIN A5
-#define BEAT_THRESHOLD_VAULE 100
+
 #define BATTERY_PIN A7
-#define BATTERY_THRESHOLD_VAULE 100
+#define BATTERY_THRESHOLD_VAULE 640
 
 
 
@@ -145,6 +146,12 @@ byte snd_28[6] = {0xAA, 0x07, 0x02, 0x00, 0x1C, 0xCF};// 28 3800
 byte snd_29[6] = {0xAA, 0x07, 0x02, 0x00, 0x1D, 0xD0};// 29 3800
 byte snd_30[6] = {0xAA, 0x07, 0x02, 0x00, 0x1E, 0xD1};// 30 5000
 
+byte snd_31[6] = {0xAA, 0x07, 0x02, 0x00, 0x1F, 0xD2};// 31 3000
+byte snd_32[6] = {0xAA, 0x07, 0x02, 0x00, 0x20, 0xD3};// 32 3100
+byte snd_33[6] = {0xAA, 0x07, 0x02, 0x00, 0x21, 0xD4};// 33 6300
+
+
+
 
 
 
@@ -179,8 +186,9 @@ void system_reset()
 }
 void III_AMP(bool sw)
 {
-  pinMode(AMP,OUTPUT);
+
   digitalWrite(AMP, sw);
+
 }
 bool III_Get_Battery_State() // false means low power
 {
@@ -211,13 +219,17 @@ bool III_Get_Battery_State() // false means low power
 void III_BT(bool sw)
 {
   pinMode(V3V,OUTPUT);
+  delay(500);
   digitalWrite(V3V, !sw);
+  delay(500);
 }
 
 void III_3v3(bool sw)// rf reset
 {
   pinMode(V3V,OUTPUT);
+  delay(500);
   digitalWrite(V3V, !sw);
+  delay(500);
 }
 int III_Get_Channel()
 {
@@ -478,18 +490,18 @@ void II_Play_S6_G4()
 {
   II_PlayWave(snd_30, 5000 + ANT_POPC);
 }
-void II_Play_SX_Error_TargetPower()// TBD
+void II_Play_SX_Error_TargetPower()
 {
-  II_PlayWave(snd_30, 5000 + ANT_POPC);
+  II_PlayWave(snd_32, 3100 + ANT_POPC);
 }
 void II_Play_S26_Share()//v197
 {
-   II_PlayWave(snd_13, 1962 + ANT_POPC);
+   II_PlayWave(snd_33, 6300 + ANT_POPC);
 }
 
 void II_Play_SX_ReselectMode()// TBD
 {
-  II_PlayWave(snd_30, 5000 + ANT_POPC);
+  II_PlayWave(snd_31, 3000 + ANT_POPC);
 }
 
 void III_Play_Who_LowPower(int who)
@@ -976,6 +988,11 @@ void DEBUG_sndtest()
   delay(1000);
   II_Play_S6_G4();
 
+  II_Play_SX_ReselectMode();
+  delay(1000);
+  II_Play_SX_Error_TargetPower();
+  delay(1000);
+   II_Play_S26_Share();
 
 
 #endif
@@ -1667,6 +1684,8 @@ int get_key()
 void gpio_init()
 {
 
+	pinMode(AMP,OUTPUT);
+	delay(500);
 
 
 }
@@ -1679,14 +1698,19 @@ void RF_24L01_Init()
 	  Mirf.setRADDR((byte *)"LAVAJ"); //设置自己的地址（发送端地址），使用5个字符
 	  Mirf.payload = sizeof(data);
 	//	Mirf.channel = 90-CONFIGRATION*15;			//设置所用信道
-#ifndef DEBUG // working mode
-	  myChannel= III_Get_Channel();
-	
-	  Mirf.channel = BASE_FREQUNCY-myChannel*20;	  
-#else //Debug Mode
-	  Mirf.channel = BASE_FREQUNCY; 	 
-	
+#ifndef _DBG_STATIC_FREQNCY 
+		Mirf.channel = BASE_FREQUNCY; 
+#else
+		 myChannel= III_Get_Channel();
+		Mirf.channel = BASE_FREQUNCY-myChannel*20;		
+#ifdef ONLINE_DEBUG
+		Serial.print("Channel:");
+		Serial.println(Mirf.channel);
+	  
 #endif
+	  
+#endif
+
 	  Mirf.config();
 	  Mirf.configRegister(RF_SETUP,SPEED_DATA_RATES);
 
@@ -2473,12 +2497,11 @@ void setup() {
 #endif
 
   //== TBD  2017-Dec-30
-//  pinMode(AMP, OUTPUT);
-//  pinMode(BTP, OUTPUT);
-//  III_AMP(1);
+
+  III_AMP(1);
 //  III_BT(1);
 
-//  set_volume();
+  set_volume();
 
 
 
@@ -2595,7 +2618,9 @@ void _test()
 //    }
 
 //========test channel select
-	III_Get_Channel();
+//	III_Get_Channel();
+	DEBUG_sndtest();
+
 
 }
 
