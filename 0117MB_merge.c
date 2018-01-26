@@ -10,13 +10,14 @@
 //2.0 Wirless +frequency hopping
 //216 test for debug mother board 
 //219--117MB Merge single version"V198"
+//223 Merge single version v199""
 #include <SoftwareSerial.h>
 #include <SPI.h>
 #include <Mirf.h>
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-#define VERION    222
+#define VERION    223
 #define DEBUG 11
 #define ONLINE_DEBUG 12
 #define STEP2STEP_DEBUG 13
@@ -218,18 +219,16 @@ bool III_Get_Battery_State() // false means low power
 
 void III_BT(bool sw)
 {
-  pinMode(V3V,OUTPUT);
-  delay(500);
+
   digitalWrite(V3V, !sw);
-  delay(500);
+
 }
 
 void III_3v3(bool sw)// rf reset
 {
-  pinMode(V3V,OUTPUT);
-  delay(500);
+
   digitalWrite(V3V, !sw);
-  delay(500);
+  
 }
 int III_Get_Channel()
 {
@@ -1684,8 +1683,10 @@ int get_key()
 void gpio_init()
 {
 
+	pinMode(V3V,OUTPUT);
+	delay(100);
 	pinMode(AMP,OUTPUT);
-	delay(500);
+	delay(100);
 
 
 }
@@ -1817,6 +1818,12 @@ bool bt_pairing()// ture connected; false disconnect
 		  Serial.println(backdata);
 		  comdata="";
 	      continue;
+	  }
+	  else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
+	  {
+		  comdata="";
+		  system_reset();
+	      return;
 
 	  }
       else
@@ -1861,6 +1868,13 @@ SELECTBIGIN:
         first_talk = 1;
         break;
       }
+	  else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
+	  {
+		  comdata="";
+		  system_reset();
+	      return false;
+
+	  }
       else if ((comdata[0] == '@') && (comdata[1] == 'P'))//V192
       {
 		ID = comdata.substring(3, 9);
@@ -1910,6 +1924,13 @@ SELECTBIGIN:
           Serial.println(backdata);
           return true;
         }
+	   else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
+	  {
+		  comdata="";
+		  system_reset();
+	      return false;
+
+	  }
 	  else if ((comdata[0] == '@') && (comdata[1] == 'P'))//V192
       {
 		ID = comdata.substring(3, 9);
@@ -1973,6 +1994,13 @@ bool bt_upload_data()// 0 means no respond.
 		comdata = "";
 		return Force_share_information_action();
       }//v197 add
+	  else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
+	  {
+		comdata="";
+		system_reset();
+		return false;
+	
+	  }
 
     }
   }
@@ -2158,6 +2186,13 @@ bool bt_upload_state()// 0 means no respond.
 		comdata = "";
         return true;
       }
+	  else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
+	  {
+		  comdata="";
+		  system_reset();
+	      return false;
+
+	  }
 
     }
   }
@@ -2449,6 +2484,13 @@ ReselectMode:
         gSection_Select_outspaker();
         return Traning_again_zhuque();
       }
+	  	  else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
+	  {
+		  comdata="";
+		  system_reset();
+	      return false;
+
+	  }
       else
       {
         comdata = "";
@@ -2496,10 +2538,10 @@ void setup() {
 
 #endif
 
-  //== TBD  2017-Dec-30
+
 
   III_AMP(1);
-//  III_BT(1);
+  III_BT(1);
 
   set_volume();
 
