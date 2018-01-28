@@ -2,11 +2,13 @@
 //1.7 frequency hopping version
 //V186 START TO DEBUG WIRELESS V3
 //v188 ONLY for first debug MB 
-#define VERISON 188
+#define VERISON 189
 //#define CONFIGRATION 1
 #define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
-//#define _DEBUG_SENDER 1
+
+//#define STEP2STEP_DEBUG 1
 //#define DEBUGMODE 11
+
 #define _DEBUG_ONLINE 10
 #define _DBG_STATIC_FREQNCY 12
 
@@ -173,6 +175,22 @@ int III_Get_Channel()
 }
 
 
+void get_rf_frequncy()
+{
+#ifdef _DBG_STATIC_FREQNCY 
+			myChannel=0;
+#else
+			 myChannel= III_Get_Channel();			
+#ifdef ONLINE_DEBUG
+			Serial.print("init_Channel:");
+			Serial.println(Mirf.channel);
+		  
+#endif
+		  
+#endif
+
+
+}
 
 
 void RF_24L01_Init()
@@ -183,19 +201,7 @@ void RF_24L01_Init()
   Mirf.init();
   Mirf.setRADDR((byte *)"LAVAJ"); //设置自己的地址（发送端地址），使用5个字符
   Mirf.payload = sizeof(data);
-//  Mirf.channel = 90-CONFIGRATION*15;          //设置所用信道
-#ifndef _DBG_STATIC_FREQNCY 
-  Mirf.channel = BASE_FREQUNCY; 
-#else
-   myChannel= III_Get_Channel();
-  Mirf.channel = BASE_FREQUNCY-myChannel*20;      
-#ifdef _DEBUG_ONLINE
-  Serial.print("Channel:");
-  Serial.println(Mirf.channel);
-
-#endif
-
-#endif
+  Mirf.channel = BASE_FREQUNCY-myChannel*20;
   Mirf.config();
   Mirf.configRegister(RF_SETUP,SPEED_DATA_RATES);
 
@@ -293,6 +299,8 @@ void setup() {
   Serial.println(VERISON); 
 #endif
   III_Set_name();
+  get_rf_frequncy();
+
   III_Rf_Init();
   pinMode(LED_PIN,OUTPUT);
   pinMode(LED2_PIN,OUTPUT);
@@ -429,8 +437,8 @@ bool III_Get_KeyState()
 {
 	int result;
 	result=analogRead(BEAT_PIN);
-#ifdef DEBUGMODE
-	Serial.print("get key state :");
+#ifdef STEP2STEP_DEBUG
+//	Serial.print("get key state :");
 	Serial.println(result);
 #endif
 
@@ -445,7 +453,7 @@ bool get_key()
   bool sre;
   if ( III_Get_KeyState())
   {
-    delay(150);
+    delay(20);
     if ( III_Get_KeyState())
     {
       sre = true;
@@ -482,6 +490,8 @@ void _test()
 
 	
 	int _ii;
+
+	
 //	 Serial.println("==1st test item get name==");
 //		for(_ii=0;_ii<6;_ii++)
 //		{
@@ -516,13 +526,13 @@ void _test()
 //		delay(100);
 //		}
 //	 Serial.println("==Next test item key state==");
-//		for(_ii=0;_ii<50;_ii++)
-//		{
-//	 	III_Get_KeyState();
-//		delay(200);
-//		}
-	III_Get_Battery_State();
-delay(1000);
+	if(get_key())
+		Serial.println("get beat");
+	 	
+		delay(20);
+	
+//	III_Get_Battery_State();
+//delay(1000);
 
 }
 void loop()
@@ -548,7 +558,7 @@ _test();
       Temp += char(data[i]);
     }
 
-#ifdef _DEBUG_SENDER
+#ifdef STEP2STEP_DEBUG
   //Serial.print("ss");
 
     Serial.println(Temp);
@@ -631,14 +641,14 @@ _test();
   {
     if (get_key())
     {
-#ifdef _DEBUG_SENDER
+#ifdef STEP2STEP_DEBUG
       Serial.println(KEY_BIT);
 #endif
       III_Control_LED(0);
   //  III_Rf_Init();
       rf_Send_key();
     // III_Rf_Init();
-      delay(500);
+      delay(30);
     }
 
 

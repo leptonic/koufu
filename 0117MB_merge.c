@@ -17,8 +17,8 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-#define VERION    223
-#define DEBUG 11
+#define VERION    224
+//#define DEBUG 11
 #define ONLINE_DEBUG 12
 #define STEP2STEP_DEBUG 13
 #define _DBG_STATIC_FREQNCY  15
@@ -1013,6 +1013,10 @@ void set_volume_silence()// aa 13 01 1e dc max
 
 void set_volume()// aa 13 01 1e dc max
 {
+#ifdef STEP2STEP_DEBUG
+		Serial.println("_set_volume");
+#endif
+
   SendData(0xaa);
   SendData(0x13);
   SendData(0x01);
@@ -1045,15 +1049,13 @@ void Sendcmd(byte  ps[], int sizef)
 bool beat_bird_toSTART()
 {
 
-  int key;
-  int random_i;
-  key = 0;
+  int random_i; 
   timeout = 0;
   //III_TrunOFF_All_LED();
   II_Play_S6_start_QuanPuwords();
   III_TrunON_All_LED();
 
-  while ((key == 0) && timeout < 12000)
+  while (timeout < 64000)
   {
     timeout++;
 #if 0 // remove this region 
@@ -1690,6 +1692,23 @@ void gpio_init()
 
 
 }
+void get_rf_frequncy()
+{
+#ifdef _DBG_STATIC_FREQNCY 
+			myChannel=0;
+#else
+			 myChannel= III_Get_Channel();
+				
+#ifdef ONLINE_DEBUG
+			Serial.print("init_Channel:");
+			Serial.println(Mirf.channel);
+		  
+#endif
+		  
+#endif
+
+
+}
 void RF_24L01_Init()
 {
 
@@ -1697,21 +1716,8 @@ void RF_24L01_Init()
 	 Mirf.spi = &MirfHardwareSpi;
 	  Mirf.init();
 	  Mirf.setRADDR((byte *)"LAVAJ"); //设置自己的地址（发送端地址），使用5个字符
-	  Mirf.payload = sizeof(data);
-	//	Mirf.channel = 90-CONFIGRATION*15;			//设置所用信道
-#ifndef _DBG_STATIC_FREQNCY 
-		Mirf.channel = BASE_FREQUNCY; 
-#else
-		 myChannel= III_Get_Channel();
-		Mirf.channel = BASE_FREQUNCY-myChannel*20;		
-#ifdef ONLINE_DEBUG
-		Serial.print("Channel:");
-		Serial.println(Mirf.channel);
-	  
-#endif
-	  
-#endif
-
+	  Mirf.payload = sizeof(data);	
+	  Mirf.channel = BASE_FREQUNCY-myChannel*20;		
 	  Mirf.config();
 	  Mirf.configRegister(RF_SETUP,SPEED_DATA_RATES);
 
@@ -2517,6 +2523,7 @@ void setup() {
    ss.begin(9600);
  
   Serial.begin(9600);
+  get_rf_frequncy();
 
   III_Rf_Init(0);
   
