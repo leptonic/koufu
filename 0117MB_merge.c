@@ -17,7 +17,7 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-#define VERION    224
+#define VERION    225
 //#define DEBUG 11
 #define ONLINE_DEBUG 12
 #define STEP2STEP_DEBUG 13
@@ -1383,19 +1383,34 @@ void check_targetOnline_withVoice()
 {
   byte state = (byte)get_who_is_online();
   if (SectionSelect == state)
-    return;
+  	{
+	gSection_Select_outspaker();
+	return;
+    }
+    
 
 
   // if command over state than report error to app and set state as real state.
+#ifdef STEP2STEP_DEBUG
+	 
+  Serial.println(SectionSelect);
+  Serial.println(state);
+
+
+#endif
+
   if (!check_state_error(SectionSelect, state))
   {
+ #ifdef STEP2STEP_DEBUG
+    Serial.println("Error: Too many targets was selected!");
+ #endif
     bt_sendError();
     SectionSelect = state; // Pluged < Selected
   }
   else
   {
     SectionSelect = SectionSelect; // Pluged > Selected
-    delay(2000);
+    delay(100);
     gSection_Select_outspaker();
     // Serial.println(comdata);
 
@@ -1439,36 +1454,41 @@ void check_battery_voltage()
 bool check_state_error(byte app, byte host) // true is right ,false is error
 {
   bool result;
-  result = false;
+  
+	if((app&host)==app)
+	{
+	    return true;
+	}
+	else
+		return false;
+//  if ((app & 0x01 == 1) && (host & 0x01 == 0))
+//  {
+//    return result;
+//  }
+//  if ((app & 0x02 == 0x02) && (host & 0x02 == 0))
+//  {
+//    return result;
+//  }
+//  if ((app & 0x08 == 0x08) && (host & 0x08 == 0))
+//  {
+//    return result;
+//  }
+//  if ((app & 0x10 == 0x10) && (host & 0x10 == 0))
+//  {
+//    return result;
+//  }
+//  if ((app & 0x20 == 0x20) && (host & 0x20 == 0))
+//  {
+//    return result;
+//  }
+//  if ((app & 0x04 == 0x04) && (host & 0x04 == 0))
+//  {
+//    return result;
+//  }
 
-  if ((app & 0x04 == 1) && (host & 0x04 == 0))
-  {
-    return result;
-  }
-  if ((app & 0x02 == 1) && (host & 0x02 == 0))
-  {
-    return result;
-  }
-  if ((app & 0x08 == 1) && (host & 0x08 == 0))
-  {
-    return result;
-  }
-  if ((app & 0x10 == 1) && (host & 0x10 == 0))
-  {
-    return result;
-  }
-  if ((app & 0x20 == 1) && (host & 0x20 == 0))
-  {
-    return result;
-  }
-  if ((app & 0x40 == 1) && (host & 0x40 == 0))
-  {
-    return result;
-  }
+//  result = true;
 
-  result = true;
-
-  return result;
+//  return result;
 
 
 }
@@ -2018,10 +2038,11 @@ bool bt_upload_data()// 0 means no respond.
 bool Force_share_information_action()// 1 have shared 0 exit //v197 add
 {
 	timeout=0;
+	II_Play_S26_Share();
+		delay(2);
 	while(timeout<FORCE_SHARE_INFORMATION_TIMEOUT)
 	{
-		II_Play_S26_Share();
-		delay(2);
+		
 		   timeout++;
 		  
 		   while (Serial.available() > 0)
@@ -2487,7 +2508,7 @@ ReselectMode:
 
         }
         work_state = STATE_PRE_TRAINNING_S5; // break the while
-        gSection_Select_outspaker();
+       check_targetOnline_withVoice();// gSection_Select_outspaker();
         return Traning_again_zhuque();
       }
 	  	  else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
@@ -2717,7 +2738,9 @@ void loop() {
     //Serial.println(SectionSelect);//debug
 
     work_state = STATE_PRE_TRAINNING_S5; // break the while
-    gSection_Select_outspaker();
+//    gSection_Select_outspaker();
+    check_targetOnline_withVoice();
+
 
   }
 
