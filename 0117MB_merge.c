@@ -17,8 +17,8 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-#define VERION    223
-#define DEBUG 11
+#define VERION    225
+//#define DEBUG 11
 #define ONLINE_DEBUG 12
 #define STEP2STEP_DEBUG 13
 #define _DBG_STATIC_FREQNCY  15
@@ -1013,6 +1013,10 @@ void set_volume_silence()// aa 13 01 1e dc max
 
 void set_volume()// aa 13 01 1e dc max
 {
+#ifdef STEP2STEP_DEBUG
+		Serial.println("_set_volume");
+#endif
+
   SendData(0xaa);
   SendData(0x13);
   SendData(0x01);
@@ -1045,15 +1049,13 @@ void Sendcmd(byte  ps[], int sizef)
 bool beat_bird_toSTART()
 {
 
-  int key;
-  int random_i;
-  key = 0;
+  int random_i; 
   timeout = 0;
   //III_TrunOFF_All_LED();
   II_Play_S6_start_QuanPuwords();
   III_TrunON_All_LED();
 
-  while ((key == 0) && timeout < 12000)
+  while (timeout < 64000)
   {
     timeout++;
 #if 0 // remove this region 
@@ -1381,19 +1383,34 @@ void check_targetOnline_withVoice()
 {
   byte state = (byte)get_who_is_online();
   if (SectionSelect == state)
-    return;
+  	{
+	gSection_Select_outspaker();
+	return;
+    }
+    
 
 
   // if command over state than report error to app and set state as real state.
+#ifdef STEP2STEP_DEBUG
+	 
+  Serial.println(SectionSelect);
+  Serial.println(state);
+
+
+#endif
+
   if (!check_state_error(SectionSelect, state))
   {
+ #ifdef STEP2STEP_DEBUG
+    Serial.println("Error: Too many targets was selected!");
+ #endif
     bt_sendError();
     SectionSelect = state; // Pluged < Selected
   }
   else
   {
     SectionSelect = SectionSelect; // Pluged > Selected
-    delay(2000);
+    delay(100);
     gSection_Select_outspaker();
     // Serial.println(comdata);
 
@@ -1437,36 +1454,41 @@ void check_battery_voltage()
 bool check_state_error(byte app, byte host) // true is right ,false is error
 {
   bool result;
-  result = false;
+  
+	if((app&host)==app)
+	{
+	    return true;
+	}
+	else
+		return false;
+//  if ((app & 0x01 == 1) && (host & 0x01 == 0))
+//  {
+//    return result;
+//  }
+//  if ((app & 0x02 == 0x02) && (host & 0x02 == 0))
+//  {
+//    return result;
+//  }
+//  if ((app & 0x08 == 0x08) && (host & 0x08 == 0))
+//  {
+//    return result;
+//  }
+//  if ((app & 0x10 == 0x10) && (host & 0x10 == 0))
+//  {
+//    return result;
+//  }
+//  if ((app & 0x20 == 0x20) && (host & 0x20 == 0))
+//  {
+//    return result;
+//  }
+//  if ((app & 0x04 == 0x04) && (host & 0x04 == 0))
+//  {
+//    return result;
+//  }
 
-  if ((app & 0x04 == 1) && (host & 0x04 == 0))
-  {
-    return result;
-  }
-  if ((app & 0x02 == 1) && (host & 0x02 == 0))
-  {
-    return result;
-  }
-  if ((app & 0x08 == 1) && (host & 0x08 == 0))
-  {
-    return result;
-  }
-  if ((app & 0x10 == 1) && (host & 0x10 == 0))
-  {
-    return result;
-  }
-  if ((app & 0x20 == 1) && (host & 0x20 == 0))
-  {
-    return result;
-  }
-  if ((app & 0x40 == 1) && (host & 0x40 == 0))
-  {
-    return result;
-  }
+//  result = true;
 
-  result = true;
-
-  return result;
+//  return result;
 
 
 }
@@ -1690,6 +1712,23 @@ void gpio_init()
 
 
 }
+void get_rf_frequncy()
+{
+#ifdef _DBG_STATIC_FREQNCY 
+			myChannel=0;
+#else
+			 myChannel= III_Get_Channel();
+				
+#ifdef ONLINE_DEBUG
+			Serial.print("init_Channel:");
+			Serial.println(Mirf.channel);
+		  
+#endif
+		  
+#endif
+
+
+}
 void RF_24L01_Init()
 {
 
@@ -1697,21 +1736,8 @@ void RF_24L01_Init()
 	 Mirf.spi = &MirfHardwareSpi;
 	  Mirf.init();
 	  Mirf.setRADDR((byte *)"LAVAJ"); //设置自己的地址（发送端地址），使用5个字符
-	  Mirf.payload = sizeof(data);
-	//	Mirf.channel = 90-CONFIGRATION*15;			//设置所用信道
-#ifndef _DBG_STATIC_FREQNCY 
-		Mirf.channel = BASE_FREQUNCY; 
-#else
-		 myChannel= III_Get_Channel();
-		Mirf.channel = BASE_FREQUNCY-myChannel*20;		
-#ifdef ONLINE_DEBUG
-		Serial.print("Channel:");
-		Serial.println(Mirf.channel);
-	  
-#endif
-	  
-#endif
-
+	  Mirf.payload = sizeof(data);	
+	  Mirf.channel = BASE_FREQUNCY-myChannel*20;		
 	  Mirf.config();
 	  Mirf.configRegister(RF_SETUP,SPEED_DATA_RATES);
 
@@ -2012,10 +2038,11 @@ bool bt_upload_data()// 0 means no respond.
 bool Force_share_information_action()// 1 have shared 0 exit //v197 add
 {
 	timeout=0;
+	II_Play_S26_Share();
+		delay(2);
 	while(timeout<FORCE_SHARE_INFORMATION_TIMEOUT)
 	{
-		II_Play_S26_Share();
-		delay(2);
+		
 		   timeout++;
 		  
 		   while (Serial.available() > 0)
@@ -2481,7 +2508,7 @@ ReselectMode:
 
         }
         work_state = STATE_PRE_TRAINNING_S5; // break the while
-        gSection_Select_outspaker();
+       check_targetOnline_withVoice();// gSection_Select_outspaker();
         return Traning_again_zhuque();
       }
 	  	  else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
@@ -2517,6 +2544,7 @@ void setup() {
    ss.begin(9600);
  
   Serial.begin(9600);
+  get_rf_frequncy();
 
   III_Rf_Init(0);
   
@@ -2710,7 +2738,9 @@ void loop() {
     //Serial.println(SectionSelect);//debug
 
     work_state = STATE_PRE_TRAINNING_S5; // break the while
-    gSection_Select_outspaker();
+//    gSection_Select_outspaker();
+    check_targetOnline_withVoice();
+
 
   }
 
