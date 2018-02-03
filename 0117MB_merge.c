@@ -17,7 +17,7 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-#define VERION    225
+#define VERION    226
 //#define DEBUG 11
 #define ONLINE_DEBUG 12
 #define STEP2STEP_DEBUG 13
@@ -78,7 +78,7 @@
 #define FORCE_SHARE_INFORMATION_TIMEOUT 60000
 #define TRY_AGAIN_TIMEOUT 5
 #define TRY_AGAIN_TIMEO 36000
-#define RUN_SCRIPT_TIME 10
+#define RUN_SCRIPT_TIME 100
 #define ONEBIRD_START_TIMEOUT 1
 #else
 #define PAIRING_TIMEOUT 30000
@@ -371,6 +371,8 @@ void II_Play_S5_welcome()
 
 void II_Play_S7_startword()
 {
+	bt_upload_state_withoutack();
+
 #ifdef STEP2STEP_DEBUG
 	Serial.println("II_Play_S7_startword");
 #endif

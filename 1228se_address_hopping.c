@@ -9,7 +9,7 @@
 //#define STEP2STEP_DEBUG 1
 //#define DEBUGMODE 11
 
-#define _DEBUG_ONLINE 10
+//#define _DEBUG_ONLINE 10
 #define _DBG_STATIC_FREQNCY 12
 
 #define ZQ_T 'A'
