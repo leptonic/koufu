@@ -19,8 +19,8 @@
 
 #define VERION    226
 //#define DEBUG 11
-#define ONLINE_DEBUG 12
-#define STEP2STEP_DEBUG 13
+//#define ONLINE_DEBUG 12
+//#define STEP2STEP_DEBUG 13
 #define _DBG_STATIC_FREQNCY  15
 
 
