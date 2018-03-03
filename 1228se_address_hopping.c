@@ -2,7 +2,7 @@
 //1.7 frequency hopping version
 //V186 START TO DEBUG WIRELESS V3
 //v188 ONLY for first debug MB 
-#define VERISON 189
+#define VERISON 190
 //#define CONFIGRATION 1
 #define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
 
@@ -36,7 +36,7 @@
 #define CHANNEL_THRESHOLD_VAULE 50
 
 #define BEAT_PIN A5
-#define BEAT_THRESHOLD_VAULE 100
+#define BEAT_THRESHOLD_VAULE 125
 #define BATTERY_PIN A7
 #define BATTERY_THRESHOLD_VAULE 640//2v
 
@@ -102,6 +102,9 @@ char KEY_BIT;
 
 void III_Get_myName()
 {
+	//myname=NAME_RIGHT_BAIHU;
+	//return;
+
 	int result;
 		pinMode(NAME1_PIN,INPUT_PULLUP);
 		pinMode(NAME2_PIN,INPUT_PULLUP);
@@ -434,19 +437,25 @@ for(fi=0;fi<3;fi++)
 
 }
 bool III_Get_KeyState()
-{
-	int result;
-	result=analogRead(BEAT_PIN);
-#ifdef STEP2STEP_DEBUG
-//	Serial.print("get key state :");
-	Serial.println(result);
+{ int result;
+  result=analogRead(BEAT_PIN);
+#ifdef DEBUGMODE
+  Serial.print("get key state :");
+  Serial.println(result);
 #endif
 
-	if(result>BEAT_THRESHOLD_VAULE)
-		return true;
-	else
-		return false;
+  if(result<BEAT_THRESHOLD_VAULE)
+  {
+    delay(10);
+    result=analogRead(BEAT_PIN);
+     if(result<BEAT_THRESHOLD_VAULE)
+     return true;
+        else
+    return false;
 
+    }
+    else
+    return false;
 }
 bool get_key()
 {
