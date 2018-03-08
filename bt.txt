@@ -9,7 +9,10 @@ ACK#OK#     41 43 4B 23 4F 4B 23
 ====
 40 53 23 05 23 
 
-========
+#R#90#
+#ACKTION#
+#NEXT#
+
 ACK#556699# 
 #SELECTMODE#
 #5
