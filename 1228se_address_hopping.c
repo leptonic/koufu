@@ -1,8 +1,9 @@
 ﻿//kongfu Target Firmware
 //1.7 frequency hopping version
 //V186 START TO DEBUG WIRELESS V3
-//v188 ONLY for first debug MB 
-#define VERISON 190
+//v188 ONLY for first debug MB
+//v200 Add Sleep mode
+#define VERISON 200
 //#define CONFIGRATION 1
 #define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
 
@@ -99,6 +100,14 @@ int myChannel;
 
 char CHECK_BIT;
 char KEY_BIT;
+void Sleep_avr(){
+  ACSR |=_BV(ACD);//OFF ACD
+  ADCSRA=0;//OFF ADC
+
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN  ); // sleep mode is set here
+  sleep_enable();
+  sleep_mode();                        // System sleeps here
+}
 
 void III_Get_myName()
 {
@@ -663,6 +672,22 @@ _test();
 
   }
   delay(2);
+  ////////debug sleep mode 
+   III_Control_LED(1);
+  delay(1000);
+   III_Control_LED(0);
+   delay(1000);
+      III_Control_LED(1);
+  delay(1000);
+   III_Control_LED(0);
+   delay(1000);
+      III_Control_LED(1);
+  delay(1000);
+   III_Control_LED(0);
+   
+  delay(3000);
+  
+  Sleep_avr();
 //  III_Control_LED(0);// for idle mode
 #endif
 }
