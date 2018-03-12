@@ -4,6 +4,7 @@
 //v188 ONLY for first debug MB
 //v200 Add Sleep mode
 #define VERISON 200
+#define SLEEP_TEST 1
 //#define CONFIGRATION 1
 #define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
 
@@ -672,6 +673,7 @@ _test();
 
   }
   delay(2);
+#ifdef SLEEP_TEST
   ////////debug sleep mode 
    III_Control_LED(1);
   delay(1000);
@@ -688,6 +690,7 @@ _test();
   delay(3000);
   
   Sleep_avr();
+#endif
 //  III_Control_LED(0);// for idle mode
 #endif
 }
