@@ -17,7 +17,7 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-#define VERION    226
+#define VERION    2272
 //#define DEBUG 11
 //#define ONLINE_DEBUG 12
 //#define STEP2STEP_DEBUG 13
@@ -2621,12 +2621,12 @@ void _test()
 {
 //=========test who is online
 
-//  String backdata = "";	
- //   Serial.println("start check who is online");
-//	   SectionSelect = get_who_is_online();
-//	 backdata.concat("#");
-//		  backdata.concat(SectionSelect);
-//		  Serial.println(backdata);
+  String backdata = "";	
+   Serial.println("start check who is online");
+	   SectionSelect = get_who_is_online();
+	 backdata.concat("#");
+		  backdata.concat(SectionSelect);
+		  Serial.println(backdata);
 
 //test_all_target();
 
@@ -2691,7 +2691,7 @@ void _test()
 
 //========test channel select
 //	III_Get_Channel();
-	DEBUG_sndtest();
+//	DEBUG_sndtest();
 
 
 }

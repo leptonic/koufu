@@ -3,8 +3,8 @@
 //V186 START TO DEBUG WIRELESS V3
 //v188 ONLY for first debug MB
 //v200 Add Sleep mode
-#define VERISON 200
-#define SLEEP_TEST 1
+#define VERISON 201
+//#define SLEEP_TEST 1
 //#define CONFIGRATION 1
 #define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
 
@@ -116,9 +116,9 @@ void III_Get_myName()
 	//return;
 
 	int result;
-		pinMode(NAME1_PIN,INPUT_PULLUP);
-		pinMode(NAME2_PIN,INPUT_PULLUP);
-		pinMode(NAME3_PIN,INPUT_PULLUP);
+		pinMode(NAME1_PIN,INPUT);
+		pinMode(NAME2_PIN,INPUT);
+		pinMode(NAME3_PIN,INPUT);
 	if(digitalRead(NAME1_PIN))
 		result=0x01;
 	else
@@ -162,28 +162,40 @@ int III_Get_Channel()
 {
 #ifdef DEBUGMODE
 	int result;
-	result=analogRead(CHANNEL_1_PIN );
-	Serial.print("dbChannel 1:");
-	Serial.println(result);
-	delay(1000);
+//	result=analogRead(CHANNEL_1_PIN );
+//	Serial.print("dbChannel 1:");
+//	Serial.println(result);
+//	delay(1000);
+//	
+//	result=analogRead(CHANNEL_2_PIN  );
+//	Serial.print("dbChannel 2:");
+//	Serial.println(result);
+//	delay(1000);
+	result=0x00;
+	if(analogRead(CHANNEL_1_PIN)>CHANNEL_THRESHOLD_VAULE )
+		result=0x01;
 	
-	result=analogRead(CHANNEL_2_PIN  );
-	Serial.print("dbChannel 2:");
-	Serial.println(result);
-	delay(1000);
+	if(analogRead(CHANNEL_2_PIN )>CHANNEL_THRESHOLD_VAULE )
+		result|=0x02;
 	
+		Serial.print("CHANNEL NUMBER:");
+	Serial.println(result);
+	return result;
 
 #else
 	int result;
-	if(analogRead(CHANNEL_1_PIN )>CHANNEL_THRESHOLD_VAULE )
+	
+	result=0x00;
+	if(analogRead(CHANNEL_1_PIN)>CHANNEL_THRESHOLD_VAULE )
 		result=0x01;
-	else
-		result=0x00;
 	
-	if(analogRead(CHANNEL_2_PIN  )>CHANNEL_THRESHOLD_VAULE )
-		result!=0x02;
+	if(analogRead(CHANNEL_2_PIN )>CHANNEL_THRESHOLD_VAULE )
+		result|=0x02;
 	
+		Serial.print("CHANNEL NUMBER:");
+	Serial.println(result);
 	return result;
+
 #endif
 }
 
@@ -521,13 +533,13 @@ void _test()
 //				Serial.println(myname);		
 //				delay(1000);
 //		}	
-//	 Serial.println("==Next test item get channel==");
-//		for(_ii=0;_ii<5;_ii++)
-//		{
-//		myChannel= III_Get_Channel();
-//		 delay(1000);
-//		}
-//			
+	 Serial.println("==Next test item get channel==");
+		for(_ii=0;_ii<5;_ii++)
+		{
+		myChannel= III_Get_Channel();
+		 delay(1000);
+		}
+			
 //	 Serial.println("==Next test item LED state==");
 //		for(_ii=0;_ii<2;_ii++)
 //		{
@@ -545,10 +557,10 @@ void _test()
 //		delay(100);
 //		}
 //	 Serial.println("==Next test item key state==");
-	if(get_key())
-		Serial.println("get beat");
-	 	
-		delay(20);
+//	if(get_key())
+//		Serial.println("get beat");
+//	 	
+//		delay(20);
 	
 //	III_Get_Battery_State();
 //delay(1000);
