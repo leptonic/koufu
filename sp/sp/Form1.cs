@@ -27,7 +27,30 @@ namespace SPA
         string[] ButtonList = { "buttonQ", "buttonW", "buttonE", "buttonA", "buttonS", "buttonD", "buttonU", "buttonI", "buttonO", "buttonJ", "buttonK", "buttonL", "buttonSpace" };
         byte bTarget;
         //Stream htmlbox;
+        private delegate void delInfoList(string text);//申明委托，防止不同线程设置richtextbox时出现错误
+        void SetrichTextBox(string value)
+        {
 
+            if (richTextBox_RX.InvokeRequired)
+            {
+                delInfoList d = new delInfoList(SetrichTextBox);
+                richTextBox_RX.Invoke(d, value);
+            }
+            else
+            {
+                if (richTextBox_RX.Lines.Length > 100)
+                { richTextBox_RX.Clear(); }
+
+                //========richtextbox滚动条自动移至最后一条记录
+                //让文本框获取焦点 
+                richTextBox_RX.Focus();
+                //设置光标的位置到文本尾 
+                richTextBox_RX.Select(richTextBox_RX.TextLength, 0);
+                //滚动到控件光标处 
+                richTextBox_RX.ScrollToCaret();
+                richTextBox_RX.AppendText(value);
+            }
+        }
         //初始化
         public OJ_Serial()
         {
@@ -76,6 +99,7 @@ namespace SPA
         private void button2_Click(object sender, EventArgs e)
         {
             this.tabControl.Focus();
+       
             try
             {
                 bTarget = 0;
@@ -202,10 +226,13 @@ namespace SPA
 
         private void RX_thread()
         {
-            int buffersize = _SerialPort.BytesToRead;   //十六进制数的大小
+            int buffersize = _SerialPort.BytesToRead;   //十六进制数的大小            
             byte[] buffer = new Byte[buffersize];   //创建缓冲区
             _SerialPort.Read(buffer, 0, buffersize);
-            richTextBox_RX.AppendText(HEX_To_ASCII(buffer)+"("+HEX_To_String(buffer)+")");
+            string allstring = HEX_To_ASCII(buffer) + "(" + HEX_To_String(buffer) + ")";
+            allstring=allstring.Replace("\r","");
+            allstring = allstring.Replace("\n", "");
+             SetrichTextBox(">"+allstring+"\r\n");
             if (RX_HEX_checkBox.Checked)
             {
                 RXbox.AppendText(HEX_To_String(buffer));
@@ -913,6 +940,21 @@ namespace SPA
             bTarget = 0;
             int int32ds = Convert.ToInt32(bTarget);
             label_tg.Text = "0x" + Convert.ToString(int32ds, 16);
+        }
+
+        private void button27_Click(object sender, EventArgs e)
+        {
+            string cmd;
+            int int32s = Convert.ToInt32(bTarget);
+            string ASCIIstr1 = ((char)int32s).ToString();
+
+            cmd = "@S#" + ASCIIstr1 + "#";
+            _Serialport_tx(cmd);
+        }
+
+        private void button30_Click(object sender, EventArgs e)
+        {
+            richTextBox_RX.Clear();
         }
 
         private void label19_Click(object sender, EventArgs e)

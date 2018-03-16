@@ -36,3 +36,12 @@ C:\Users\v-yiblia\Desktop\sp\sp\obj\Debug\sp.Properties.Resources.resources
 C:\Users\v-yiblia\Desktop\sp\sp\obj\Debug\sp.csproj.GenerateResource.Cache
 C:\Users\v-yiblia\Desktop\sp\sp\bin\Debug\sp.exe
 C:\Users\v-yiblia\Desktop\sp\sp\bin\Debug\sp.pdb
+D:\github\koufu\sp\sp\bin\Debug\sp.exe.config
+D:\github\koufu\sp\sp\obj\Debug\sp.exe
+D:\github\koufu\sp\sp\obj\Debug\sp.pdb
+D:\github\koufu\sp\sp\bin\Debug\sp.exe
+D:\github\koufu\sp\sp\bin\Debug\sp.pdb
+D:\github\koufu\sp\sp\obj\Debug\sp.csprojResolveAssemblyReference.cache
+D:\github\koufu\sp\sp\obj\Debug\SPA.OJ_Serial.resources
+D:\github\koufu\sp\sp\obj\Debug\sp.Properties.Resources.resources
+D:\github\koufu\sp\sp\obj\Debug\sp.csproj.GenerateResource.Cache
