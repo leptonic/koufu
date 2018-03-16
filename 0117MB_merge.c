@@ -17,7 +17,7 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-#define VERION    2272
+#define VERION    227
 //#define DEBUG 11
 //#define ONLINE_DEBUG 12
 //#define STEP2STEP_DEBUG 13
@@ -493,6 +493,8 @@ void II_Play_S6_G4()
 }
 void II_Play_SX_Error_TargetPower()
 {
+  Serial.print("#TARGET_OFF#");
+
   II_PlayWave(snd_32, 3100 + ANT_POPC);
 }
 void II_Play_S26_Share()//v197
