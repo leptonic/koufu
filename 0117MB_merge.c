@@ -1,4 +1,5 @@
-﻿//0.6 Debug mode ,base onKongFu 0.0.41
+﻿//<<<<MOTHER BOARD PROGRAM>>>>
+//0.6 Debug mode ,base onKongFu 0.0.41
 //0.7
 ///1029 Prerelease version
 //1.0 Nov-04 new rule ,and fixed button fake press,and reindex all postionof keys
@@ -11,18 +12,19 @@
 //216 test for debug mother board 
 //219--117MB Merge single version"V198"
 //223 Merge single version v199""
+//228 add battery voltage check part TBD
 #include <SoftwareSerial.h>
 #include <SPI.h>
 #include <Mirf.h>
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-#define VERION    227
-//#define DEBUG 11
+#define VERION    228
+#define DEBUG 11
 #define ONLINE_DEBUG 12
 #define STEP2STEP_DEBUG 13
 #define _DBG_STATIC_FREQNCY  15
-
+#define _DBG_BATTERY  16
 
 #define STATE_TRAINNING 1
 #define STATE_IDEA      2
@@ -1446,15 +1448,7 @@ void bt_sendState()
 
 
 }
-void check_battery_voltage()
-{
-  //  int valb;
-  //  valb = analogRead(A0);
-  //  if (valb <= 292)
-  //Serial.println(valb);
-  //   II_Play_lowpower();
-  // delay(3000);
-}
+
 bool check_state_error(byte app, byte host) // true is right ,false is error
 {
   bool result;
@@ -1496,6 +1490,24 @@ bool check_state_error(byte app, byte host) // true is right ,false is error
 
 
 }
+void do_Battery_check()
+{
+
+if(III_Get_Battery_State())
+{
+	II_Play_lowpower();
+	delay(3000);
+
+	II_Play_lowpower();
+	delay(3000);
+	
+	II_Play_lowpower();
+	delay(3000);
+	system_reset();
+
+}
+
+}
 int get_who_is_online()//
 {
   int value;
@@ -1506,6 +1518,8 @@ int get_who_is_online()//
   int j;
   int q;
   result = 0;
+  // first check itself 
+  do_Battery_check();
   for(q=0;q<3;q++)
   	{
   for (i = 1; i < 7; i++)
@@ -2623,12 +2637,12 @@ void _test()
 {
 //=========test who is online
 
-  String backdata = "";	
-   Serial.println("start check who is online");
-	   SectionSelect = get_who_is_online();
-	 backdata.concat("#");
-		  backdata.concat(SectionSelect);
-		  Serial.println(backdata);
+//  String backdata = "";	
+//   Serial.println("start check who is online");
+//	   SectionSelect = get_who_is_online();
+//	 backdata.concat("#");
+//		  backdata.concat(SectionSelect);
+//		  Serial.println(backdata);
 
 //test_all_target();
 
@@ -2694,6 +2708,17 @@ void _test()
 //========test channel select
 //	III_Get_Channel();
 //	DEBUG_sndtest();
+
+int _ii;
+		 Serial.println("==Next test item ADC state==");
+			for(_ii=0;_ii<50;_ii++)
+			{
+			if(III_Get_Battery_State())s
+				Serial.println("ok");
+			else
+				Serial.println("low power");
+			delay(100);
+			}
 
 
 }

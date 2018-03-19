@@ -1,12 +1,12 @@
-﻿//kongfu Target Firmware
+﻿//<<<<<<<<SON BOARD FIRMWARE>>>>>
 //1.7 frequency hopping version
 //V186 START TO DEBUG WIRELESS V3
 //v188 ONLY for first debug MB
 //v200 Add Sleep mode
-#define VERISON 201
+#define VERISON 202
 //#define SLEEP_TEST 1
 //#define CONFIGRATION 1
-#define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
+//#define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
 
 //#define STEP2STEP_DEBUG 1
 //#define DEBUGMODE 11
@@ -533,12 +533,12 @@ void _test()
 //				Serial.println(myname);		
 //				delay(1000);
 //		}	
-	 Serial.println("==Next test item get channel==");
-		for(_ii=0;_ii<5;_ii++)
-		{
-		myChannel= III_Get_Channel();
-		 delay(1000);
-		}
+//	 Serial.println("==Next test item get channel==");
+//		for(_ii=0;_ii<5;_ii++)
+//		{
+//		myChannel= III_Get_Channel();
+//		 delay(1000);
+//		}
 			
 //	 Serial.println("==Next test item LED state==");
 //		for(_ii=0;_ii<2;_ii++)
@@ -553,7 +553,10 @@ void _test()
 //	 Serial.println("==Next test item ADC state==");
 //		for(_ii=0;_ii<50;_ii++)
 //		{
-//	 	III_Get_Battery_State();
+//	 	if(III_Get_Battery_State())
+//			Serial.println("ok");
+//		else
+//			Serial.println("low power");
 //		delay(100);
 //		}
 //	 Serial.println("==Next test item key state==");
