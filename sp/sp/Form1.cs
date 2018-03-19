@@ -957,6 +957,29 @@ namespace SPA
             richTextBox_RX.Clear();
         }
 
+        private void button31_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                int int32s = int.Parse(textBox21.Text);
+                bTarget = Convert.ToByte(int32s);
+                int int32ds = Convert.ToInt32(bTarget);
+                label_tg.Text = "0x" + Convert.ToString(int32ds, 16);
+
+                string cmd;
+                int int32ss = Convert.ToInt32(bTarget);
+                string ASCIIstr1 = ((char)int32ss).ToString();
+
+                cmd = "@S#" + ASCIIstr1 + "#";
+                _Serialport_tx(cmd);
+
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
         private void label19_Click(object sender, EventArgs e)
         {
 
