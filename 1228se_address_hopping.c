@@ -330,7 +330,10 @@ void setup() {
   pinMode(LED_PIN,OUTPUT);
   pinMode(LED2_PIN,OUTPUT);
 
+  III_Control_LED(1);
+  delay(200);
   III_Control_LED(0);
+  
  // wdt_enable(TIMEOUT);
   // attachInterrupt(0, Receive, FALLING);
 }
@@ -635,8 +638,29 @@ _test();
 
       if ((char)data[1] == KEY_BIT)
       {
+      #if 1
+	  char sd[2];
+	   sd[0] = '$';
+	   sd[1] = KEY_BIT;
+	   rf_Send(sd);
+	   
+	    III_Control_LED(1);
+       delay(50);
+       III_Control_LED(0);
+	  delay(150);		  
+	  III_Control_LED(1);
+	  delay(170);
+	  III_Control_LED(0);
+	  delay(100);				
+	  III_Control_LED(1);
+	  delay(50);
+	  III_Control_LED(0);
+	     rf_Send(sd);
+		 delay(200);
+		 rf_Send(sd);
+	  #else
         char sd[2];
-        III_Control_LED(1);
+//        III_Control_LED(1);
         sd[0] = '$';
         if (!III_Get_Battery_State())
         {
@@ -662,9 +686,18 @@ _test();
 //       delay(79);
   
         }
-      
-         
-          III_Control_LED(0);
+       III_Control_LED(1);
+       delay(50);
+       III_Control_LED(0);
+	  delay(150);		  
+	  III_Control_LED(1);
+	  delay(170);
+	  III_Control_LED(0);
+	  delay(100);				
+	  III_Control_LED(1);
+	  delay(50);
+	  III_Control_LED(0);
+	  #endif
 
       }
     }// +++

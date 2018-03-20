@@ -19,12 +19,12 @@
 #include <nRF24L01.h>
 #include <MirfHardwareSpiDriver.h>
 
-#define VERION    228
+#define VERION    229
 #define DEBUG 11
 #define ONLINE_DEBUG 12
 #define STEP2STEP_DEBUG 13
 #define _DBG_STATIC_FREQNCY  15
-#define _DBG_BATTERY  16
+#define _DBG_NOCHECK_BATTERY 16
 
 #define STATE_TRAINNING 1
 #define STATE_IDEA      2
@@ -380,7 +380,7 @@ void II_Play_S7_startword()
 #endif
   II_PlayWave(snd_11, 4000 + ANT_POPC);
 }
-void II_Play_lowpower()//== TBD  2017-Dec-18
+void II_Play_lowpower()
 {
   II_PlayWave(snd_8, 674 + ANT_POPC);
 }
@@ -707,7 +707,7 @@ void w_Send_oneSignal(int type, int num)
       sd[1] = '6';
       break;
   }
-  III_Rf_Init(0);
+//  III_Rf_Init(0);
  // w_Sends(sd);
  w_Sends(sd);
   //  Serial.println(sd[1]);
@@ -1268,7 +1268,7 @@ bool  oneBeat(int key_in)
     //  delay(1000);
           timeout = 0;
 	  // Serial.print("s");
-	  III_Rf_Init(0);
+//	  III_Rf_Init(0);
 	  while(Mirf.isSending()&&!Mirf.dataReady()&&timeout <200)
 	  	{
 	  	timeout++;
@@ -1278,10 +1278,10 @@ bool  oneBeat(int key_in)
 	  if(timeout>198)
 	  	Serial.println("sw-timeout");
 #endif
-	III_Rf_Init(0);
+//	III_Rf_Init(0);
 
     w_Send_oneSignal(BT, key_in); //send data
-      III_Rf_Init(0);
+//      III_Rf_Init(0);
     timeout = 0;
     while (timeout < 1009)
     {
@@ -1493,6 +1493,7 @@ bool check_state_error(byte app, byte host) // true is right ,false is error
 void do_Battery_check()
 {
 
+#ifndef _DBG_NOCHECK_BATTERY
 if(III_Get_Battery_State())
 {
 	II_Play_lowpower();
@@ -1506,7 +1507,7 @@ if(III_Get_Battery_State())
 	system_reset();
 
 }
-
+#endif
 }
 int get_who_is_online()//
 {
@@ -1520,39 +1521,26 @@ int get_who_is_online()//
   result = 0;
   // first check itself 
   do_Battery_check();
-  for(q=0;q<3;q++)
+ // for(q=0;q<3;q++)
   	{
   for (i = 1; i < 7; i++)
   {
 
-    delay(100);
-	if((result&(0x01 << (i - 1)))==1)
-		continue;
-   // III_Rf_Init(i);
-	
-  //  for (j = 0; j < 2; j++)
+    delay(500);
+//	if((result&(0x01 << (i - 1)))==1)
+//		continue;
+	for (j = 0; j < 3; j++)
     {
-   // III_Rf_Init(0);
-      //RF_24L01_address_Hopping(i);
+
 	  delay(100);
       timeout = 0;
-//	   Serial.print("s");
-	  III_Rf_Init(0);
-	  while(Mirf.isSending()&&!Mirf.dataReady()&&timeout <200)
-	  	{
-	  	timeout++;
-         delay(20);
-	  	}
-//	  if(timeout>200)
-//	  	 Serial.print("B");
-	  w_Send_oneSignal(CK, i);// Direct bit target
-//	   Serial.println(i);
-     // delay(i*10);
-//	  timeout = 0;
-//	  delay(6);
-	 timeout = 0;
-	 III_Rf_Init(0);
 
+
+	  w_Send_oneSignal(CK, i);// Direct bit target
+
+	 timeout = 0;
+//	 III_Rf_Init(0);
+     delay(20);
       while (timeout < 505)
       {
 
@@ -1562,57 +1550,58 @@ int get_who_is_online()//
         {
 			//delay(3);
           Mirf.getData(data);
-          Temp = "";
-          for (iii = 0; iii < Mirf.payload; iii++) //
-          {
-            Temp += char(data[iii]);
-          }
-#ifdef  ONLINE_DEBUG
-//          if (Temp != "")
-//          Serial.println(Temp);
-#endif
-
-          if (data[0] == '$')
-          {
-//            Serial.print("$s");
-//            Serial.println(i);
-            if ((char)data[1] == _itoa(i))
-            {
-              result |= 0x01 << (i - 1);
-#ifdef  ONLINE_DEBUG
-//			 Serial.print("get :");
-//            Serial.println(i);
-            ///  Serial.println(result);
-#endif
-//			w_Send_oneSignal(VT, i);
-        	 goto NextTarget;
-            }
-            else if (data[1] == 'L')
-            {
-
-
-#ifdef  ONLINE_DEBUG
-              Serial.print("LowPower : ");
-              Serial.println(i);
-#endif
-
-              III_Play_Who_LowPower(i);
-//			  w_Send_oneSignal(VT, i);
-              goto NextTarget;  // v190 Repeat 1 times for low power
-            }
-          }
-
           //delay(1);
-        }
-		
-		
-
+          break;
+        }		
+		delay(3);
       }
+	  if(timeout<500)
+	  	{
+				if (data[0] == '$')
+				{
+				  if ((char)data[1] == _itoa(i))
+				  {
+					result |= 0x01 << (i - 1);
+#ifdef  STEP2STEP_DEBUG
+				   Serial.print("get :");
+				  Serial.println(i);
+			  Serial.println(result);
+#endif
+					j=4;
+	  //		  w_Send_oneSignal(VT, i);
+//				   goto NextTarget;
+				  }
+				  else if (data[1] == 'L')
+				  {
+	  
+	  
+#ifdef  STEP2STEP_DEBUG
+					Serial.print("LowPower : ");
+					Serial.println(i);
+#endif
+	  
+					III_Play_Who_LowPower(i);
+					j=4;
+	  //			w_Send_oneSignal(VT, i);
+//					goto NextTarget;  // v190 Repeat 1 times for low power
+				  }
+				}
+				
+
+	  }
+	  else
+	  	{
+	     
+#ifdef  STEP2STEP_DEBUG
+		   Serial.print(".");			
+#endif		
+
+	    }
 
       
     }
-	NextTarget:
-	continue;
+//	NextTarget:
+//	continue;
   }
 
 }
@@ -2637,12 +2626,12 @@ void _test()
 {
 //=========test who is online
 
-//  String backdata = "";	
-//   Serial.println("start check who is online");
-//	   SectionSelect = get_who_is_online();
-//	 backdata.concat("#");
-//		  backdata.concat(SectionSelect);
-//		  Serial.println(backdata);
+  String backdata = "";	
+   Serial.println("start check who is online");
+	   SectionSelect = get_who_is_online();
+	 backdata.concat("#");
+		  backdata.concat(SectionSelect);
+		  Serial.println(backdata);
 
 //test_all_target();
 
@@ -2709,16 +2698,16 @@ void _test()
 //	III_Get_Channel();
 //	DEBUG_sndtest();
 
-int _ii;
-		 Serial.println("==Next test item ADC state==");
-			for(_ii=0;_ii<50;_ii++)
-			{
-			if(III_Get_Battery_State())s
-				Serial.println("ok");
-			else
-				Serial.println("low power");
-			delay(100);
-			}
+//int _ii;
+//		 Serial.println("==Next test item ADC state==");
+//			for(_ii=0;_ii<50;_ii++)
+//			{
+//			if(III_Get_Battery_State())
+//				Serial.println("ok");
+//			else
+//				Serial.println("low power");
+//			delay(100);
+//			}
 
 
 }
@@ -2743,6 +2732,7 @@ void loop() {
     {
       II_Play_SX_Error_TargetPower();
 #ifdef  ONLINE_DEBUG
+	  Serial.print("SectionSelect=");
       Serial.println(SectionSelect);
       Serial.println("CantOpenTargetPower");
 #endif
