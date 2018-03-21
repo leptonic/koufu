@@ -647,17 +647,16 @@ _test();
 	    III_Control_LED(1);
        delay(50);
        III_Control_LED(0);
-	  delay(150);		  
+	  delay(50);		  
 	  III_Control_LED(1);
-	  delay(170);
+	  delay(200);
 	  III_Control_LED(0);
-	  delay(100);				
+	  delay(50);				
 	  III_Control_LED(1);
 	  delay(50);
 	  III_Control_LED(0);
 	     rf_Send(sd);
-		 delay(200);
-		 rf_Send(sd);
+		
 	  #else
         char sd[2];
 //        III_Control_LED(1);

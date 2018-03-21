@@ -167,7 +167,7 @@ String comdata = "";
 String ID = "";
 bool gSilence_Mode;
 byte data[2];
-
+bool rFisBusying;
 int myChannel;
 
 void(* resetFunc) (void) = 0;
@@ -1509,6 +1509,23 @@ if(III_Get_Battery_State())
 }
 #endif
 }
+void D2onChange()  
+{  
+   if ( digitalRead(2) == LOW )  
+   	{
+     rFisBusying=true;
+//     if (!Mirf.isSending() && Mirf.dataReady())
+        {
+			//delay(3);
+          Mirf.getData(data);
+          //delay(1);
+          
+        }		
+   	}
+   else  
+     rFisBusying=false; 
+} 
+
 int get_who_is_online()//
 {
   int value;
@@ -1527,33 +1544,62 @@ int get_who_is_online()//
   {
 
     delay(500);
+	#ifdef  STEP2STEP_DEBUG
+		   Serial.print("+");			
+#endif
 //	if((result&(0x01 << (i - 1)))==1)
 //		continue;
 	for (j = 0; j < 3; j++)
     {
+#ifdef  STEP2STEP_DEBUG
+				 Serial.print("j"); 		  
+#endif
 
 	  delay(100);
       timeout = 0;
+	data[0]=0;
+		data[1]=0;
 
-
+	while((timeout < 550)&&(rFisBusying))
+		{
+		timeout++;
+	delay(1);
+	}
+	if(timeout>500)
+	{
+	Mirf.flushRx();
+	III_Rf_Init(0);
+#ifdef  STEP2STEP_DEBUG
+		   Serial.print(">");			
+#endif	
+	}
+	#ifdef  STEP2STEP_DEBUG
+				 Serial.print("s"); 		  
+#endif
+	
 	  w_Send_oneSignal(CK, i);// Direct bit target
+#ifdef  STEP2STEP_DEBUG
+					  Serial.print("o");		   
+#endif
 
 	 timeout = 0;
 //	 III_Rf_Init(0);
      delay(20);
-      while (timeout < 505)
+      while ((timeout < 550)&&(rFisBusying))
       {
 
         timeout++;
-	
-        if (!Mirf.isSending() && Mirf.dataReady())
-        {
-			//delay(3);
-          Mirf.getData(data);
-          //delay(1);
-          break;
-        }		
-		delay(3);
+		data[0]=0;
+		data[1]=0;
+//        if (!Mirf.isSending() && Mirf.dataReady())
+//        {
+//			//delay(3);
+//          Mirf.getData(data);
+//          //delay(1);
+//          break;
+//        }		
+
+		delay(1);
       }
 	  if(timeout<500)
 	  	{
@@ -1804,6 +1850,7 @@ void RF_24L01_address_Hopping(int address)//channel must from 1-6 !!
 }
 void III_Rf_Init(int paramter)
 {
+	rFisBusying=false;
 	RF_24L01_Init();
 //	RF_24L01_address_Hopping(paramter);
 //	RF_24L01_Frequency_Hopping(paramter);
@@ -2545,6 +2592,7 @@ void setup() {
   int silince_tot;
 
   gpio_init();
+   attachInterrupt( digitalPinToInterrupt(2), D2onChange, CHANGE);  
   randomSeed(analogRead(A7));
 
   
