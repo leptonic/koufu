@@ -1,4 +1,5 @@
 ﻿//<<<<MOTHER BOARD PROGRAM>>>>
+
 //0.6 Debug mode ,base onKongFu 0.0.41
 //0.7
 ///1029 Prerelease version
@@ -13,13 +14,16 @@
 //219--117MB Merge single version"V198"
 //223 Merge single version v199""
 //228 add battery voltage check part TBD
+//230 try to replace new libray to mirf
 #include <SoftwareSerial.h>
 #include <SPI.h>
-#include <Mirf.h>
+//#include <Mirf.h>
 #include <nRF24L01.h>
-#include <MirfHardwareSpiDriver.h>
+#include <RF24.h>
 
-#define VERION    229
+//#include <MirfHardwareSpiDriver.h>
+
+#define VERION    230
 #define DEBUG 11
 #define ONLINE_DEBUG 12
 #define STEP2STEP_DEBUG 13
@@ -71,6 +75,8 @@
 #define BATTERY_PIN A7
 #define BATTERY_THRESHOLD_VAULE 640
 
+#define READING_MODE false
+#define WRITING_MODE true
 
 
 #ifdef ONLINE_DEBUG
@@ -95,13 +101,6 @@
 
 #endif
 
-//#include "LedControl.h"
-#include <SPI.h>
-#include <Mirf.h>
-#include <nRF24L01.h>
-#include <MirfHardwareSpiDriver.h>
-
-//#include <Keypad.h>
 
 SoftwareSerial ss(9,6);
 //byte rowPins[3] = {3, 4, 5}; //connect to the row pinouts of the keypad
@@ -155,8 +154,20 @@ byte snd_33[6] = {0xAA, 0x07, 0x02, 0x00, 0x21, 0xD4};// 33 6300
 
 
 
+//rf trm part
 
+const int pinCE = 8; //This pin is used to set the nRF24 to standby (0) or active mode (1)
+const int pinCSN = 7; //This pin is used to tell the nRF24 whether the SPI communication is a command or message to send out
 
+volatile byte rBuffer[2]; 
+volatile int rCount=0;
+bool rf_state=WRITING_MODE;
+
+RF24 wirelessSPI(pinCE, pinCSN); // Create your nRF24 object or wireless SPI connection
+const uint64_t pRAddress = 0xEEFAFDFDEELL;     
+const uint64_t pWAddress = 0xEEFDFAF50DFLL;     
+
+//rf o
 
 
 int timeout;
@@ -166,8 +177,7 @@ int work_state;
 String comdata = "";
 String ID = "";
 bool gSilence_Mode;
-byte data[2];
-bool rFisBusying;
+
 int myChannel;
 
 void(* resetFunc) (void) = 0;
@@ -199,8 +209,10 @@ bool III_Get_Battery_State() // false means low power
   int valb;
   valb = analogRead(BATTERY_PIN );
  #ifdef DEBUG
+Serial.begin(9600);
   Serial.print("Batter ADC:");
   Serial.println(valb);
+Serial.end();
  #endif
   delay(200);
   if (valb <= BATTERY_THRESHOLD_VAULE )
@@ -237,13 +249,17 @@ int III_Get_Channel()
 #ifdef DEBUG
 	int result;
 	result=analogRead(CHANNEL_1_PIN );
+Serial.begin(9600);
 	Serial.print("dbChannel 1:");
 	Serial.println(result);
+Serial.end();
 	delay(1000);
 	
 	result=analogRead(CHANNEL_2_PIN  );
+Serial.begin(9600);
 	Serial.print("dbChannel 2:");
 	Serial.println(result);
+Serial.end();
 	delay(1000);
 	
 
@@ -288,7 +304,9 @@ void II_Play_S1_start()//zhinengleiba kaiqi
 {
 	
 #ifdef STEP2STEP_DEBUG
+Serial.begin(9600);
 	Serial.println("II_Play_S1_start");
+Serial.end();
 #endif
 
   //  II_PlayWave(snd_24,3138+500);
@@ -365,7 +383,9 @@ void II_Play_S5_welcome()
 {
 	
 #ifdef STEP2STEP_DEBUG	
+Serial.begin(9600);
 	Serial.println("II_Play_S5_welcome");
+Serial.end();
 #endif
 
   II_PlayWave(snd_3, 12000 + ANT_POPC);
@@ -376,7 +396,9 @@ void II_Play_S7_startword()
 	bt_upload_state_withoutack();
 
 #ifdef STEP2STEP_DEBUG
+Serial.begin(9600);
 	Serial.println("II_Play_S7_startword");
+Serial.end();
 #endif
   II_PlayWave(snd_11, 4000 + ANT_POPC);
 }
@@ -417,14 +439,18 @@ void II_Play_foot_L()
 void II_Play_S25_again()
 {
 #ifdef STEP2STEP_DEBUG
+Serial.begin(9600);
 	Serial.println("II_Play_S25_again");
+Serial.end();
 #endif
   II_PlayWave(snd_10, 2297 + ANT_POPC);
 }
 void II_Play_S2_BT_connectOK()
 {
 #ifdef STEP2STEP_DEBUG
+Serial.begin(9600);
 	Serial.println("II_Play_S2_BT_connectOK");
+Serial.end();
 #endif
   II_PlayWave(snd_12, 2000 + ANT_POPC);
 }
@@ -432,7 +458,9 @@ void II_Play_S2_BT_connectOK()
 void II_Play_s22_BT_disconnect()
 {
 #ifdef STEP2STEP_DEBUG
+Serial.begin(9600);
 	Serial.println("II_Play_s22_BT_disconnect");
+Serial.end();
 #endif
   II_PlayWave(snd_13, 1962 + ANT_POPC);
 }
@@ -443,7 +471,9 @@ void II_Play_S23_Closing()
 void II_Play_S24_Select_mode()
 {
 #ifdef STEP2STEP_DEBUG
+Serial.begin(9600);
 	Serial.println("II_Play_S24_Select_mode");
+Serial.end();
 #endif
  bt_upload_select_withoutack();
   II_PlayWave(snd_17, 2000 + ANT_POPC);
@@ -454,9 +484,11 @@ void II_Play_S6_start_QuanPuwords()
 
   result = random(1, 5);// 9 targets version
 #ifdef  STEP2STEP_DEBUG
+Serial.begin(9600);
   Serial.print("QuanPu-");
 
   Serial.println(result);
+Serial.end();
 #endif
   switch (result)
   {
@@ -495,7 +527,9 @@ void II_Play_S6_G4()
 }
 void II_Play_SX_Error_TargetPower()
 {
+Serial.begin(9600);
   Serial.print("#TARGET_OFF#");
+Serial.end();
 
   II_PlayWave(snd_32, 3100 + ANT_POPC);
 }
@@ -635,6 +669,9 @@ int _atoi(char a)
 void w_Sends(char *str)
 {
   int lens;
+
+  SetRF_Mode(WRITING_MODE);
+  
   lens = strlen(str);
 
   char msg[lens];
@@ -643,24 +680,17 @@ void w_Sends(char *str)
   {
     msg[i] = int(str[i]);
   }
-  Mirf.send((byte *)&msg);
+  if (!wirelessSPI.write( &msg, lens )){  //if the send fails let the user know over serial monitor
+#ifdef ONLINE_DEBUG
+Serial.begin(9600);
+	   Serial.println("packet delivery failed");  
+Serial.end();
+#endif
+  }
 
-  while (Mirf.isSending()) {;}
 }
-void w_transmit(char *str)
-{
-  char msg[4];
 
 
-    msg[0] = int(str[0]);
-	msg[1] = int(str[1]);
-
-  msg[2]='\r';
-  msg[3]='\n';
-  Mirf.send((byte *)&msg);
-
-  while (Mirf.isSending()) {}
-}
 
 void w_Send_oneSignal(int type, int num)
 {
@@ -742,31 +772,10 @@ void  III_Switch_LED(bool sw, int i)
 }
 
 
-void RF_test_receive_data()
-{
-//  byte data[Mirf.payload];
-  if (!Mirf.isSending() && Mirf.dataReady())
-  { //
 
-    Mirf.getData(data);
-
-
-    int i;
-    String Temp;
-    for (i = 0; i < Mirf.payload; i++) //
-    {
-      Temp += char(data[i]);
-    }
-    Serial.println(Temp);
-
-
-  }
-
-
-
-}
 void test_all_target()
 {
+#if 0
   int  i;
 
   for (i = 1; i < 3; i++)
@@ -809,7 +818,7 @@ void test_all_target()
     }
 
   }
-
+#endif
 }
 
 
@@ -1020,7 +1029,9 @@ void set_volume_silence()// aa 13 01 1e dc max
 void set_volume()// aa 13 01 1e dc max
 {
 #ifdef STEP2STEP_DEBUG
+	Serial.begin(9600);
 		Serial.println("_set_volume");
+	Serial.end();
 #endif
 
   SendData(0xaa);
@@ -1054,7 +1065,7 @@ void Sendcmd(byte  ps[], int sizef)
 }
 bool beat_bird_toSTART()
 {
-
+#if 0
   int random_i; 
   timeout = 0;
   //III_TrunOFF_All_LED();
@@ -1109,7 +1120,7 @@ bool beat_bird_toSTART()
     }
 	delay(1);
   }
-
+#endif
   return false;
 
 
@@ -1180,8 +1191,10 @@ bool  gCheck_Section_Select(int random_in)
 void gSection_Select_outspaker()
 {
 #ifdef ONLINE_DEBUG
+Serial.begin(9600);
   Serial.print("ss=");
   Serial.println(SectionSelect);
+Serial.end();
 #endif
   if (!(SectionSelect & 0x0f))
     GameMode = GAME_MODE_ERROR;
@@ -1190,14 +1203,18 @@ void gSection_Select_outspaker()
     if ((SectionSelect & 0x08) || (SectionSelect & 0xf0))
     {
 #ifdef  ONLINE_DEBUG
+Serial.begin(9600);
       Serial.println("Round Mode");
+Serial.end();
 #endif
       II_Play_S4_roundmode();
     }
     else
     {
 #ifdef  ONLINE_DEBUG
+Serial.begin(9600);
       Serial.println("Single Mode");
+Serial.end();
 #endif
       II_Play_S3_singlemode();
     }
@@ -1251,6 +1268,7 @@ void play_ss_ForTarget(int iDirect)
 }
 bool  oneBeat(int key_in)
 {
+#if 0
   int direct;
   int i;
   int vkey;
@@ -1341,6 +1359,7 @@ bool  oneBeat(int key_in)
 
 
   total_take_time += timeout;
+  #endif
   return false;
 }
 
@@ -1350,7 +1369,9 @@ void bt_sendData(int data) //bt send part TBD
   work_state = STATE_BLUETOOTH;
   II_Play_btsend();
 
+Serial.begin(9600);
   Serial.print(data);
+Serial.end();
   work_state = STATE_IDEA;
 
 }
@@ -1358,6 +1379,7 @@ void bt_sendData(int data) //bt send part TBD
 void bt_receivedata()
 {
 
+Serial.begin(9600);
   while (Serial.available() > 0)
   {
     comdata += char(Serial.read());
@@ -1383,6 +1405,7 @@ void bt_receivedata()
       comdata = "";
     }
   }
+Serial.end();
 
 }
 void check_targetOnline_withVoice()
@@ -1399,8 +1422,10 @@ void check_targetOnline_withVoice()
   // if command over state than report error to app and set state as real state.
 #ifdef STEP2STEP_DEBUG
 	 
+Serial.begin(9600);
   Serial.println(SectionSelect);
   Serial.println(state);
+Serial.end();
 
 
 #endif
@@ -1408,7 +1433,9 @@ void check_targetOnline_withVoice()
   if (!check_state_error(SectionSelect, state))
   {
  #ifdef STEP2STEP_DEBUG
+Serial.begin(9600);
     Serial.println("Error: Too many targets was selected!");
+Serial.end();
  #endif
     bt_sendError();
     SectionSelect = state; // Pluged < Selected
@@ -1426,12 +1453,16 @@ void check_targetOnline_withVoice()
 void bt_sendError()
 {
   work_state = STATE_BLUETOOTH;
+Serial.begin(9600);
   Serial.print(0xff);
+Serial.end();
   byte state = (byte)get_who_is_online();
 
   // II_Play_btsend();
 
+Serial.begin(9600);
   Serial.print(state);
+Serial.end();
   work_state = STATE_IDEA;
 
 }
@@ -1443,7 +1474,9 @@ void bt_sendState()
 
   // II_Play_btsend();
 
+Serial.begin(9600);
   Serial.print(state);
+Serial.end();
   work_state = STATE_IDEA;
 
 
@@ -1511,19 +1544,16 @@ if(III_Get_Battery_State())
 }
 void D2onChange()  
 {  
-   if ( digitalRead(2) == LOW )  
-   	{
-     rFisBusying=true;
-//     if (!Mirf.isSending() && Mirf.dataReady())
-        {
-			//delay(3);
-          Mirf.getData(data);
-          //delay(1);
-          
-        }		
-   	}
-   else  
-     rFisBusying=false; 
+
+	if(rf_state==READING_MODE)
+	{
+	     rCount++;
+			while(wirelessSPI.available()) 
+			{ //get data sent from transmit
+				  wirelessSPI.read( &rBuffer, 2 ); //read one byte of data and store it in gotByte variable
+			}
+	}
+  
 } 
 
 int get_who_is_online()//
@@ -1544,86 +1574,67 @@ int get_who_is_online()//
   {
 
     delay(500);
-	#ifdef  STEP2STEP_DEBUG
-		   Serial.print("+");			
-#endif
+
 //	if((result&(0x01 << (i - 1)))==1)
 //		continue;
 	for (j = 0; j < 3; j++)
     {
-#ifdef  STEP2STEP_DEBUG
-				 Serial.print("j"); 		  
-#endif
 
-	  delay(100);
-      timeout = 0;
-	data[0]=0;
-		data[1]=0;
 
-	while((timeout < 550)&&(rFisBusying))
-		{
-		timeout++;
-	delay(1);
-	}
-	if(timeout>500)
-	{
-	Mirf.flushRx();
-	III_Rf_Init(0);
 #ifdef  STEP2STEP_DEBUG
-		   Serial.print(">");			
-#endif	
-	}
-	#ifdef  STEP2STEP_DEBUG
-				 Serial.print("s"); 		  
+			Serial.begin(9600);
+		 Serial.print("+"); 		  
+			Serial.end();
 #endif
 	
 	  w_Send_oneSignal(CK, i);// Direct bit target
 #ifdef  STEP2STEP_DEBUG
-					  Serial.print("o");		   
+			Serial.begin(9600);
+		  Serial.print("o");		   
+			Serial.end();
 #endif
 
 	 timeout = 0;
-//	 III_Rf_Init(0);
      delay(20);
-      while ((timeout < 550)&&(rFisBusying))
+	
+	 
+		SetRF_Mode(READING_MODE);
+	
+      while ((timeout < 550)&&(rCount==0))
       {
 
         timeout++;
-		data[0]=0;
-		data[1]=0;
-//        if (!Mirf.isSending() && Mirf.dataReady())
-//        {
-//			//delay(3);
-//          Mirf.getData(data);
-//          //delay(1);
-//          break;
-//        }		
-
 		delay(1);
       }
-	  if(timeout<500)
+	  if(rCount>0)
 	  	{
-				if (data[0] == '$')
+	  	rCount=0;
+		//Serial.begin();
+				if (rBuffer[0] == '$')
 				{
-				  if ((char)data[1] == _itoa(i))
+				  if ((char)rBuffer[1] == _itoa(i))
 				  {
 					result |= 0x01 << (i - 1);
 #ifdef  STEP2STEP_DEBUG
+		Serial.begin(9600);
 				   Serial.print("get :");
 				  Serial.println(i);
 			  Serial.println(result);
+		Serial.end();
 #endif
 					j=4;
 	  //		  w_Send_oneSignal(VT, i);
 //				   goto NextTarget;
 				  }
-				  else if (data[1] == 'L')
+				  else if (rBuffer[1] == 'L')
 				  {
 	  
 	  
 #ifdef  STEP2STEP_DEBUG
+				Serial.begin(9600);
 					Serial.print("LowPower : ");
 					Serial.println(i);
+				Serial.end();
 #endif
 	  
 					III_Play_Who_LowPower(i);
@@ -1639,7 +1650,9 @@ int get_who_is_online()//
 	  	{
 	     
 #ifdef  STEP2STEP_DEBUG
+				Serial.begin(9600);
 		   Serial.print(".");			
+				Serial.end();
 #endif		
 
 	    }
@@ -1773,8 +1786,10 @@ void get_rf_frequncy()
 			 myChannel= III_Get_Channel();
 				
 #ifdef ONLINE_DEBUG
+		Serial.begin(9600);
 			Serial.print("init_Channel:");
 			Serial.println(Mirf.channel);
+		Serial.end();
 		  
 #endif
 		  
@@ -1784,73 +1799,115 @@ void get_rf_frequncy()
 }
 void RF_24L01_Init()
 {
+	 wirelessSPI.begin();			 //Start the nRF24 module
+	  wirelessSPI.setChannel(BASE_FREQUNCY-myChannel*20);
+	  wirelessSPI.setRetries( 15, 5 ) ;
+	  wirelessSPI.maskIRQ(1,1,0); 
+	  wirelessSPI.setAutoAck(1);					// Ensure autoACK is enabled so rec sends ack packet to let you know it got the transmit packet payload
+	  wirelessSPI.enableAckPayload();				// Allow optional ack payloads
+	  wirelessSPI.setPALevel(RF24_PA_LOW);
+	  wirelessSPI.openWritingPipe(pWAddress);		// pipe address that we will communicate over, must be the same for each nRF24 module
+	 wirelessSPI.openReadingPipe(1,pRAddress);   
+	  wirelessSPI.stopListening();	
+	
 
+}
+void RF_reset()
+{
+    wirelessSPI.powerDown();
+	delay(100);
+	 wirelessSPI.powerUp();
+	wirelessSPI.begin();			 //Start the nRF24 module
+		  wirelessSPI.setChannel(BASE_FREQUNCY-myChannel*20);
+		  wirelessSPI.setAutoAck(1);					// Ensure autoACK is enabled so rec sends ack packet to let you know it got the transmit packet payload
+		  wirelessSPI.setRetries( 15, 5 ) ;
+		  
+		  wirelessSPI.enableAckPayload();				// Allow optional ack payloads
+		  wirelessSPI.setPALevel(RF24_PA_LOW);
+		  wirelessSPI.openWritingPipe(pWAddress);		// pipe address that we will communicate over, must be the same for each nRF24 module
+		 wirelessSPI.openReadingPipe(1,pRAddress);	
+	
+		 wirelessSPI.maskIRQ(1,1,0);		 
 
-	 Mirf.spi = &MirfHardwareSpi;
-	  Mirf.init();
-	  Mirf.setRADDR((byte *)"LAVAJ"); //设置自己的地址（发送端地址），使用5个字符
-	  Mirf.payload = sizeof(data);	
-	  Mirf.channel = BASE_FREQUNCY-myChannel*20;		
-	  Mirf.config();
-	  Mirf.configRegister(RF_SETUP,SPEED_DATA_RATES);
+}
 
+void SetRF_Mode(bool pWorkingMode)
+{
+
+	rf_state=pWorkingMode;
+
+	if(pWorkingMode)
+		{
+		RF_reset();
+			 wirelessSPI.stopListening();		  //transmitter so stop listening for data
+		}
+	 else
+	 	{
+	 	RF_reset();
+	 	rCount=0;
+	 	rBuffer[0]=0;
+	     rBuffer[1]=0;	
+	 	 
+		 
+	 		  wirelessSPI.startListening();                 // Start listening for messages
+	 	}
 }
 void RF_24L01_Frequency_Hopping(int channel)//channel must from 1-6 !!
 {
 
 
-  Mirf.spi = &MirfHardwareSpi;
-  Mirf.init();
-  Mirf.setRADDR((byte *)"LAVAJ"); //设置自己的地址（发送端地址），使用5个字符
-  Mirf.payload = sizeof(data);
-  Mirf.channel = BASE_FREQUNCY-channel*15;          //设置所用信道
-  Mirf.config();
-  Mirf.configRegister(RF_SETUP,SPEED_DATA_RATES);
+//  Mirf.spi = &MirfHardwareSpi;
+//  Mirf.init();
+//  Mirf.setRADDR((byte *)"LAVAJ"); //设置自己的地址（发送端地址），使用5个字符
+//  Mirf.payload = sizeof(data);
+//  Mirf.channel = BASE_FREQUNCY-channel*15;          //设置所用信道
+//  Mirf.config();
+//  Mirf.configRegister(RF_SETUP,SPEED_DATA_RATES);
 
 }
 void RF_24L01_address_Hopping(int address)//channel must from 1-6 !!
 {
 
 
-  Mirf.spi = &MirfHardwareSpi;
-  Mirf.init();
-  switch((int) address)
-  {
-  case 1:   
-    Mirf.setRADDR((byte *)"LAVAVA");
-    break;
-  
-  case 2:   
-    Mirf.setRADDR((byte *)"LBVBVB");
-    break;
-  
-  case 3:   
-    Mirf.setRADDR((byte *)"LCVCVC");
-    break;
-  
-  case 4:   
-    Mirf.setRADDR((byte *)"LDVDVD");
-    break;
-  
-  case 5:   
-    Mirf.setRADDR((byte *)"LEVEVE");
-    break;
-  
-  default:    
-    Mirf.setRADDR((byte *)"LFVFVF");
-    break;
-              
+//  Mirf.spi = &MirfHardwareSpi;
+//  Mirf.init();
+//  switch((int) address)
+//  {
+//  case 1:   
+//    Mirf.setRADDR((byte *)"LAVAVA");
+//    break;
+//  
+//  case 2:   
+//    Mirf.setRADDR((byte *)"LBVBVB");
+//    break;
+//  
+//  case 3:   
+//    Mirf.setRADDR((byte *)"LCVCVC");
+//    break;
+//  
+//  case 4:   
+//    Mirf.setRADDR((byte *)"LDVDVD");
+//    break;
+//  
+//  case 5:   
+//    Mirf.setRADDR((byte *)"LEVEVE");
+//    break;
+//  
+//  default:    
+//    Mirf.setRADDR((byte *)"LFVFVF");
+//    break;
+//              
 
-  }
-  Mirf.payload = sizeof(data);
-  Mirf.channel = BASE_FREQUNCY;          //设置所用信道
-  Mirf.config();
-  Mirf.configRegister(RF_SETUP,SPEED_DATA_RATES);
+//  }
+//  Mirf.payload = sizeof(data);
+//  Mirf.channel = BASE_FREQUNCY;          //设置所用信道
+//  Mirf.config();
+//  Mirf.configRegister(RF_SETUP,SPEED_DATA_RATES);
 
 }
 void III_Rf_Init(int paramter)
 {
-	rFisBusying=false;
+	
 	RF_24L01_Init();
 //	RF_24L01_address_Hopping(paramter);
 //	RF_24L01_Frequency_Hopping(paramter);
@@ -1869,12 +1926,14 @@ bool bt_pairing()// ture connected; false disconnect
       III_TrunON_All_LED();
     else
       III_TrunOFF_All_LED();
+Serial.begin(9600);
     while (Serial.available() > 0)
     {
       comdata += char(Serial.read());
       delay(2);
 
     }
+Serial.end();
     if (comdata.length() > 0)
     {
       if ((comdata[0] == '@') && (comdata[1] == 'P'))
@@ -1886,7 +1945,9 @@ bool bt_pairing()// ture connected; false disconnect
 		comdata="";
         backdata.concat(ID);
         backdata.concat("#");
+Serial.begin(9600);
         Serial.println(backdata);
+Serial.end();
         return true;
       }
 	  else if((comdata[0] == '@') && (comdata[1] == 'V'))
@@ -1895,7 +1956,9 @@ bool bt_pairing()// ture connected; false disconnect
 		  backdata.concat("#");
 		  backdata.concat(VERION);				
 		  backdata.concat("#");
+	Serial.begin(9600);
 		  Serial.println(backdata);
+	Serial.end();
 		  comdata="";
 	      continue;
 	  }
@@ -1932,14 +1995,18 @@ SELECTBIGIN:
     backdata = "";
       backdata.concat("#");	  
       backdata.concat(SectionSelect);
+Serial.begin(9600);
       Serial.println(backdata);
+Serial.end();
     }
+Serial.begin(9600);
     while (Serial.available() > 0)
     {
       comdata += char(Serial.read());
       delay(2);
 
     }
+Serial.end();
     if (comdata.length() > 0)
     {
       if ((comdata[0] == 'A') && (comdata[1] == 'C'))
@@ -1976,7 +2043,9 @@ SELECTBIGIN:
   }
   //get the command for APP
 #ifdef STEP2STEP_DEBUG
+Serial.begin(9600);
   Serial.println("@S##");
+Serial.end();
 #endif
   if (first_talk)
   {
@@ -1986,12 +2055,14 @@ SELECTBIGIN:
     {
       delay(2);
       timeout++;
+Serial.begin(9600);
       while (Serial.available() > 0)
       {
         comdata += char(Serial.read());
         delay(2);
 
       }
+Serial.end();
       if (comdata.length() > 0)
       {
         if ((comdata[0] == '@') && (comdata[1] == 'S'))
@@ -2001,7 +2072,9 @@ SELECTBIGIN:
           SectionSelect = (byte)ss1;//ss-48;
           backdata = "";
           backdata.concat("ACK#OK#");
+Serial.begin(9600);
           Serial.println(backdata);
+Serial.end();
           return true;
         }
 	   else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
@@ -2053,15 +2126,19 @@ bool bt_upload_data()// 0 means no respond.
       itoa(total_record, backrecord, 10);
       backdata.concat(backrecord);
       backdata.concat("#");
+Serial.begin(9600);
       Serial.println(backdata);
+Serial.end();
     }
 
+Serial.begin(9600);
     while (Serial.available() > 0)
     {
       comdata += char(Serial.read());
       delay(2);
 
     }
+Serial.end();
     if (comdata.length() > 0)
     {
       if ((comdata[0] == 'A') && (comdata[1] == 'C'))
@@ -2099,12 +2176,14 @@ bool Force_share_information_action()// 1 have shared 0 exit //v197 add
 		
 		   timeout++;
 		  
+	Serial.begin(9600);
 		   while (Serial.available() > 0)
 		   {
 			 comdata += char(Serial.read());
 			 delay(2);
 		
 		   }
+	Serial.end();
 		   if (comdata.length() > 0)
 		   {
 			 if ((comdata[0] == '@') && (comdata[1] == 'N'))//@NEXT
@@ -2134,7 +2213,9 @@ void bt_upload_state_withoutack()// 0 means no respond.
   String backdata;
   backdata = "";
   backdata.concat("#ACKTION#");
+Serial.begin(9600);
   Serial.println(backdata);
+Serial.end();
 
 
 }
@@ -2143,7 +2224,9 @@ void bt_upload_begin_withoutack()// 0 means no respond.
   String backdata;
     backdata = "";
       backdata.concat("#START#");
+Serial.begin(9600);
       Serial.println(backdata);
+Serial.end();
 
 
 
@@ -2153,7 +2236,9 @@ void bt_upload_next_withoutack()// 0 means no respond.
   String backdata;
     backdata = "";
       backdata.concat("#NEXT#");
+Serial.begin(9600);
       Serial.println(backdata);
+Serial.end();
  
 
 
@@ -2163,7 +2248,9 @@ void bt_upload_select_withoutack()// 0 means no respond.
   String backdata;
     backdata = "";
       backdata.concat("#SELECTMODE#");
+Serial.begin(9600);
       Serial.println(backdata);
+Serial.end();
  
 
 
@@ -2185,7 +2272,9 @@ void bt_Throwout_Error_withoutack()// 0 means no respond.//v1.8
 
       backdata = "";
       backdata.concat("#RESET#");
+Serial.begin(9600);
       Serial.println(backdata);
+Serial.end();
     }
 
   }
@@ -2210,15 +2299,19 @@ bool bt_upload_LowPower()// 0 means no respond.
 
       backdata = "";
       backdata.concat("#LOWPOWER#");
+Serial.begin(9600);
       Serial.println(backdata);
+Serial.end();
     }
 
+Serial.begin(9600);
     while (Serial.available() > 0)
     {
       comdata += char(Serial.read());
       delay(2);
 
     }
+Serial.end();
     if (comdata.length() > 0)
     {
       if ((comdata[0] == 'A') && (comdata[1] == 'C'))
@@ -2251,15 +2344,19 @@ bool bt_upload_state()// 0 means no respond.
 
       backdata = "";
       backdata.concat("#ACKTION#");
+Serial.begin(9600);
       Serial.println(backdata);
+Serial.end();
     }
 
+Serial.begin(9600);
     while (Serial.available() > 0)
     {
       comdata += char(Serial.read());
       delay(2);
 
     }
+Serial.end();
     if (comdata.length() > 0)
     {
       if ((comdata[0] == 'A') && (comdata[1] == 'C'))
@@ -2329,13 +2426,17 @@ void test_bt_upload()
   total_record = 249;
   if (bt_upload_data())
   {
+Serial.begin(9600);
     Serial.println("uploaded");
+Serial.end();
     comdata = "";
     // delay(5000);
   }
   else
   {
+Serial.begin(9600);
     Serial.println("ul_disconnected");
+Serial.end();
   }
 }
 void test_bt_pairing()
@@ -2343,27 +2444,36 @@ void test_bt_pairing()
 
   if (bt_pairing())
   {
+Serial.begin(9600);
     Serial.println("connected");
+Serial.end();
     comdata = "";
     // delay(5000);
   }
   else
   {
+Serial.begin(9600);
     Serial.println("disconnected");
+Serial.end();
   }
 }
 void test_bt_upload_state()
 {
   if (bt_upload_state())
   {
+Serial.begin(9600);
     Serial.println("upload state ok");
+Serial.end();
   }
   else
+Serial.begin(9600);
     Serial.println("upload state fail.");
+Serial.end();
 
 }
 void test_bt_selectMode()
 {
+Serial.begin(9600);
   SectionSelect = 0x00;
   if (bt_Select_Mode())
   {
@@ -2384,6 +2494,7 @@ void test_bt_selectMode()
     else
       Serial.println("Single MODE");
   }
+Serial.end();
 
 
 }
@@ -2397,7 +2508,7 @@ bool Bluetooth_test()
 }
 bool Traning_again_zhuque()
 {
-
+#if 0
   int key;
   int random_i;
   key = 0;
@@ -2456,12 +2567,13 @@ bool Traning_again_zhuque()
     }
 
   }
-
+#endif
   return false;
 }
 
 bool Traning_again()
 {
+#if 0
 
   int key, random_i;
   byte Temp_SS = 0;
@@ -2582,7 +2694,7 @@ ReselectMode:
 
 
   }
-
+#endif
   return false;
 }
 
@@ -2592,7 +2704,7 @@ void setup() {
   int silince_tot;
 
   gpio_init();
-   attachInterrupt( digitalPinToInterrupt(2), D2onChange, CHANGE);  
+   attachInterrupt( digitalPinToInterrupt(2), D2onChange, FALLING);  
   randomSeed(analogRead(A7));
 
   
@@ -2663,9 +2775,11 @@ void setup() {
 
 
 
+
 #endif
 
 
+	Serial.end();
 
 
                                                                        
@@ -2675,11 +2789,15 @@ void _test()
 //=========test who is online
 
   String backdata = "";	
+Serial.begin(9600);
    Serial.println("start check who is online");
+Serial.end();
 	   SectionSelect = get_who_is_online();
 	 backdata.concat("#");
 		  backdata.concat(SectionSelect);
+	Serial.begin(9600);
 		  Serial.println(backdata);
+	Serial.end();
 
 //test_all_target();
 
@@ -2780,16 +2898,20 @@ void loop() {
     {
       II_Play_SX_Error_TargetPower();
 #ifdef  ONLINE_DEBUG
+Serial.begin(9600);
 	  Serial.print("SectionSelect=");
       Serial.println(SectionSelect);
       Serial.println("CantOpenTargetPower");
+Serial.end();
 #endif
       delay(3000);
       system_reset();
 
     }
 #ifdef STEP2STEP_DEBUG
+Serial.begin(9600);
 	Serial.println("input ACK#OK#");
+Serial.end();
 #endif
     while (!bt_Select_Mode())
     {
@@ -2869,7 +2991,9 @@ void loop() {
   else
   {
     //#error can't enter trainning mode ,target link error!!
+Serial.begin(9600);
     Serial.print("GAME_MODE_ERROR");
+Serial.end();
     system_reset();
 
   }

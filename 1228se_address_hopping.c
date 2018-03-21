@@ -3,7 +3,9 @@
 //V186 START TO DEBUG WIRELESS V3
 //v188 ONLY for first debug MB
 //v200 Add Sleep mode
-#define VERISON 202
+//v210 try to replace new libray to mirf
+
+#define VERISON 210
 //#define SLEEP_TEST 1
 //#define CONFIGRATION 1
 //#define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
@@ -77,6 +79,8 @@
 //#endif
 
 
+#define READING_MODE false
+#define WRITING_MODE true
 
 #define VOTLAGE_VALUE  292
 #define BASE_FREQUNCY   90
@@ -88,19 +92,44 @@
 #include <avr/sleep.h>
 #include <avr/wdt.h>
 #include <SPI.h>
-#include <Mirf.h>
+//#include <Mirf.h>
 #include <nRF24L01.h>
-#include <MirfHardwareSpiDriver.h>
+#include <RF24.h>
+
+//rf trm part
+
+const int pinCE = 8; //This pin is used to set the nRF24 to standby (0) or active mode (1)
+const int pinCSN = 7; //This pin is used to tell the nRF24 whether the SPI communication is a command or message to send out
+
+volatile byte rBuffer[2]; 
+volatile int rCount=0;
+bool rf_state=WRITING_MODE;
+
+RF24 wirelessSPI(pinCE, pinCSN); // Create your nRF24 object or wireless SPI connection
+const uint64_t pRAddress = 0xEEFDFAF50DFLL;     
+const uint64_t pWAddress = 0xEEFAFDFDEELL;     
+
+//rf o
+
+
+
+//#include <MirfHardwareSpiDriver.h>
 void(* resetFunc) (void) = 0;
 /*SONboard Base*/
 int value;
 int timeout;
-byte data[2];
 int myname;
 int myChannel;
 
 char CHECK_BIT;
 char KEY_BIT;
+
+
+
+
+void III_Control_LED(bool sw);
+
+
 void Sleep_avr(){
   ACSR |=_BV(ACD);//OFF ACD
   ADCSRA=0;//OFF ADC
@@ -177,9 +206,10 @@ int III_Get_Channel()
 	
 	if(analogRead(CHANNEL_2_PIN )>CHANNEL_THRESHOLD_VAULE )
 		result|=0x02;
-	
-		Serial.print("CHANNEL NUMBER:");
+	Serial.begin(9600); 
+	Serial.print("CHANNEL NUMBER:");
 	Serial.println(result);
+	Serial.end();
 	return result;
 
 #else
@@ -191,9 +221,10 @@ int III_Get_Channel()
 	
 	if(analogRead(CHANNEL_2_PIN )>CHANNEL_THRESHOLD_VAULE )
 		result|=0x02;
-	
-		Serial.print("CHANNEL NUMBER:");
+	Serial.begin(9600);
+	Serial.print("CHANNEL NUMBER:");
 	Serial.println(result);
+	Serial.end();
 	return result;
 
 #endif
@@ -207,8 +238,10 @@ void get_rf_frequncy()
 #else
 			 myChannel= III_Get_Channel();			
 #ifdef ONLINE_DEBUG
+			Serial.begin(9600);
 			Serial.print("init_Channel:");
-			Serial.println(Mirf.channel);
+			Serial.println(Mirf.channel);			
+			Serial.end();
 		  
 #endif
 		  
@@ -220,67 +253,87 @@ void get_rf_frequncy()
 
 void RF_24L01_Init()
 {
+	 wirelessSPI.begin();			 //Start the nRF24 module
+	  wirelessSPI.setChannel(BASE_FREQUNCY-myChannel*20);
+	  wirelessSPI.setAutoAck(1);					// Ensure autoACK is enabled so rec sends ack packet to let you know it got the transmit packet payload
+	  wirelessSPI.setRetries( 15, 5 ) ;
+	  
+	  wirelessSPI.enableAckPayload();				// Allow optional ack payloads
+	  wirelessSPI.setPALevel(RF24_PA_LOW);
+	  wirelessSPI.openWritingPipe(pWAddress);		// pipe address that we will communicate over, must be the same for each nRF24 module
+	 wirelessSPI.openReadingPipe(1,pRAddress);  
 
-
-  Mirf.spi = &MirfHardwareSpi;
-  Mirf.init();
-  Mirf.setRADDR((byte *)"LAVAJ"); //设置自己的地址（发送端地址），使用5个字符
-  Mirf.payload = sizeof(data);
-  Mirf.channel = BASE_FREQUNCY-myChannel*20;
-  Mirf.config();
-  Mirf.configRegister(RF_SETUP,SPEED_DATA_RATES);
+	 wirelessSPI.maskIRQ(1,1,0);  		 
+	 	wirelessSPI.startListening(); 
+}
+void RF_reset()
+{
+    wirelessSPI.powerDown();
+	delay(100);
+	 wirelessSPI.powerUp();
+	wirelessSPI.begin();			 //Start the nRF24 module
+		  wirelessSPI.setChannel(BASE_FREQUNCY-myChannel*20);
+		  wirelessSPI.setAutoAck(1);					// Ensure autoACK is enabled so rec sends ack packet to let you know it got the transmit packet payload
+		  wirelessSPI.setRetries( 15, 5 ) ;
+		  
+		  wirelessSPI.enableAckPayload();				// Allow optional ack payloads
+		  wirelessSPI.setPALevel(RF24_PA_LOW);
+		  wirelessSPI.openWritingPipe(pWAddress);		// pipe address that we will communicate over, must be the same for each nRF24 module
+		 wirelessSPI.openReadingPipe(1,pRAddress);	
+	
+		 wirelessSPI.maskIRQ(1,1,0);		 
 
 }
-void RF_24L01_ah_Init()//channel must from 1-6 !!
+void SetRF_Mode(bool pWorkingMode)
 {
 
-//  Mirf.spi = &MirfHardwareSpi;
-//  Mirf.init();
-//  switch((int) CONFIGRATION)
-//  {
-//  case 1:   
-//    Mirf.setRADDR((byte *)"LAVAJ1");
-//    break;
-//  
-//  case 2:   
-//    Mirf.setRADDR((byte *)"LAVAJ2");
-//    break;
-//  
-//  case 3:   
-//    Mirf.setRADDR((byte *)"LAVAJ3");
-//    break;
-//  
-//  case 4:   
-//    Mirf.setRADDR((byte *)"LAVAJ4");
-//    break;
-//  
-//  case 5:   
-//    Mirf.setRADDR((byte *)"LAVAJ5");
-//    break;
-//  
-//  default:    
-//    Mirf.setRADDR((byte *)"LAVAJ6");
-//    break;
-//              
-//  }
-//  Mirf.setRADDR((byte *)"LAVAJ"); 
-  Mirf.payload = sizeof(data);
-  Mirf.channel = BASE_FREQUNCY;          //设置所用信道
-  Mirf.config();
-  Mirf.configRegister(RF_SETUP,SPEED_DATA_RATES);
+	rf_state=pWorkingMode;
 
+	if(pWorkingMode)
+		{
+		RF_reset();
+			 wirelessSPI.stopListening();		  //transmitter so stop listening for data
+		}
+	 else
+	 	{
+//	 	Serial.end();
+	 	rCount=0;
+	 	rBuffer[0]=0;
+	     rBuffer[1]=0;		
+	 	RF_reset(); 	 
+	 	wirelessSPI.startListening();                 // Start listening for messages
+	 	}
 }
+
+
+
 void III_Rf_Init()
 {
   RF_24L01_Init();
 
 }
+void D2onChange()  
+{  
+
+	if(rf_state==READING_MODE)
+	{
+	     rCount++;
+			while(wirelessSPI.available()) 
+			{ //get data sent from transmit
+				  wirelessSPI.read( &rBuffer, 2 ); //read one byte of data and store it in gotByte variable
+			}
+	}
+  
+} 
+
 void III_Set_name()
 {
 	III_Get_myName();
 #ifdef _DEBUG_ONLINE
+Serial.begin(9600);
    Serial.print("myname:");
    Serial.println(myname);
+Serial.end();
 #endif
 	switch(myname)
 	{
@@ -317,12 +370,16 @@ void III_Set_name()
 void setup() {
   // put your setup code here, to run once:
 #ifdef DEBUGMODE 
+Serial.begin(9600);
   Serial.begin(9600);
 //  Serial.print("Sender "); 
 //  Serial.print(CONFIGRATION); 
   Serial.print(" ver "); 
   Serial.println(VERISON); 
+Serial.end();
 #endif
+  attachInterrupt( digitalPinToInterrupt(2), D2onChange, FALLING);  
+
   III_Set_name();
   get_rf_frequncy();
 
@@ -333,14 +390,21 @@ void setup() {
   III_Control_LED(1);
   delay(200);
   III_Control_LED(0);
-  
+  Serial.begin(9600);
+	   Serial.println("Son weak up!");  
+	     Serial.print(" ver "); 
+  Serial.println(VERISON); 
+Serial.end();
  // wdt_enable(TIMEOUT);
   // attachInterrupt(0, Receive, FALLING);
 }
 
 void rf_Send(char *str)
 {
-  int lens;
+ int lens;
+
+  SetRF_Mode(WRITING_MODE);
+  
   lens = strlen(str);
 
   char msg[lens];
@@ -349,9 +413,14 @@ void rf_Send(char *str)
   {
     msg[i] = int(str[i]);
   }
-  Mirf.send((byte *)&msg);
-
-  while (Mirf.isSending()) {}
+  if (!wirelessSPI.write( &msg, lens ))
+  	{  //if the send fails let the user know over serial monitor
+#ifdef ONLINE_DEBUG
+Serial.begin(9600);
+	   Serial.println("packet delivery failed");  
+Serial.end();
+#endif
+   }
 }
 void rf_Send_key()
 {
@@ -359,24 +428,9 @@ void rf_Send_key()
   char sd[2];
   sd[0] = '$';
   sd[1] = KEY_BIT;
-  // Serial.println("get");
-  //    for (i = 0; i < 1; i++)
-//  {
-//    delay(50);
-//      timeout = 0;
-//    while(Mirf.dataReady()&&timeout <20)
-//      {
-//      timeout++;
-//         delay(2);
-//      }
-  III_Rf_Init();
+
     rf_Send(sd);
-    delay(7);
-  rf_Send(sd);
-    delay(49);
-  rf_Send(sd);
-   
-  //}
+
 
 }
 bool III_Get_Battery_State() // false means low power
@@ -391,8 +445,10 @@ bool III_Get_Battery_State() // false means low power
   int valb;
   valb = analogRead(BATTERY_PIN );
  #ifdef DEBUGMODE
+Serial.begin(9600);
   Serial.print("Batter ADC:");
   Serial.println(valb);
+Serial.end();
  #endif
   delay(200);
   if (valb <= BATTERY_THRESHOLD_VAULE )
@@ -402,10 +458,12 @@ bool III_Get_Battery_State() // false means low power
     {
       return false;
     }
-    else return true;
+    else
+		return true;
 
   }
-  else return true;
+  else
+  	return true;
 
 }
 void III_Control_LED(bool sw)
@@ -465,8 +523,10 @@ bool III_Get_KeyState()
 { int result;
   result=analogRead(BEAT_PIN);
 #ifdef DEBUGMODE
+Serial.begin(9600);
   Serial.print("get key state :");
   Serial.println(result);
+Serial.end();
 #endif
 
   if(result<BEAT_THRESHOLD_VAULE)
@@ -582,39 +642,43 @@ void loop()
 _test();
  
  #else // working mode
-  if (!Mirf.isSending() && Mirf.dataReady())
+ SetRF_Mode(READING_MODE);
+	
+      
+  if(rCount>0)
   {
-  delay(3);
-    Mirf.getData(data);
+	rCount=0;
 
 #if   1
     int i;  
     String Temp;
-    for (i = 0; i <  Mirf.payload ; i++)
+    for (i = 0; i <  2 ; i++)
     {
-      Temp += char(data[i]);
+      Temp += char(rBuffer[i]);
     }
 
 #ifdef STEP2STEP_DEBUG
   //Serial.print("ss");
+Serial.begin(9600);
 
     Serial.println(Temp);
+Serial.end();
   
 #endif
 
 #endif
 
 
-    if (data[0] == '%') //beat
+    if (rBuffer[0] == '%') //beat
     {
 
-      if (data[1] == KEY_BIT)
+      if (rBuffer[1] == KEY_BIT)
       {
         run_training();
       }
 
     }
-    else if (data[0] == '#') //Open led
+    else if (rBuffer[0] == '#') //Open led
     {
 
 //      if (data[1] == KEY_BIT)
@@ -623,7 +687,7 @@ _test();
       }
 
     }
-    else if (data[0] == '!') //Close led
+    else if (rBuffer[0] == '!') //Close led
     {
 
 //      if (data[1] == KEY_BIT)
@@ -633,10 +697,10 @@ _test();
 
     }
     
-    else if ((char)data[0] == '+') //check online & power level
+    else if ((char)rBuffer[0] == '+') //check online & power level
     {
 
-      if ((char)data[1] == KEY_BIT)
+      if ((char)rBuffer[1] == KEY_BIT)
       {
       #if 1
 	  char sd[2];
@@ -655,7 +719,7 @@ _test();
 	  III_Control_LED(1);
 	  delay(50);
 	  III_Control_LED(0);
-	     rf_Send(sd);
+	  
 		
 	  #else
         char sd[2];
@@ -708,7 +772,9 @@ _test();
     if (get_key())
     {
 #ifdef STEP2STEP_DEBUG
+Serial.begin(9600);
       Serial.println(KEY_BIT);
+Serial.end();
 #endif
       III_Control_LED(0);
   //  III_Rf_Init();
