@@ -681,29 +681,6 @@ int _atoi(char a)
   }
   return result;
 }
-void w_Sends(char *str)
-{
-  int lens;
-
- 
-  lens = strlen(str);
-
-  char msg[lens];
-  int i;
-  for (i = 0; i < lens; i++)
-  {
-    msg[i] = int(str[i]);
-  }
-   radio.startWrite( &msg, lens ,0);
-//  if (!wirelessSPI.write( &msg, lens )){  //if the send fails let the user know over serial monitor
-//#ifdef ONLINE_DEBUG
-//Serial.begin(9600);
-//	   Serial.println("packet delivery failed");  
-//Serial.end();
-//#endif
-  //}
-
-}
 
 
 
@@ -754,7 +731,8 @@ void w_Send_oneSignal(int type, int num)
   }
 //  III_Rf_Init(0);
  // w_Sends(sd);
- w_Sends(sd);
+ radio.startWrite( sd, 2 ,0);
+
   //  Serial.println(sd[1]);
 }
 void III_TrunON_All_LED()
@@ -1895,7 +1873,7 @@ void RF_24L01_Init()
   }
   radio.printDetails();                             // Dump the configuration of the rf unit for debugging
   delay(50);
-   attachInterrupt( digitalPinToInterrupt(2), D2onChange, FALLING);             // Attach interrupt handler to interrupt #0 (using pin 2) on BOTH the sender and receiver
+   attachInterrupt( digitalPinToInterrupt(2), D2onChange, LOW);             // Attach interrupt handler to interrupt #0 (using pin 2) on BOTH the sender and receiver
 
 	
 
@@ -2877,17 +2855,18 @@ void setup() {
 void _test()
 {
 //=========test who is online
-
-  String backdata = "";	
-Serial.begin(9600);
-   Serial.println("start check who is online");
-Serial.end();
-	   SectionSelect = get_who_is_online();
-	 backdata.concat("#");
-		  backdata.concat(SectionSelect);
-	Serial.begin(9600);
-		  Serial.println(backdata);
-	Serial.end();
+w_Send_oneSignal(CK, 1);// Direct bit target
+delay(2000);
+//  String backdata = "";	
+//Serial.begin(9600);
+//   Serial.println("start check who is online");
+//Serial.end();
+//	   SectionSelect = get_who_is_online();
+//	 backdata.concat("#");
+//		  backdata.concat(SectionSelect);
+//	Serial.begin(9600);
+//		  Serial.println(backdata);
+//	Serial.end();
 
 //test_all_target();
 

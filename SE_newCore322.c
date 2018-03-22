@@ -46,7 +46,7 @@
 #define BEAT_THRESHOLD_VAULE 125
 #define BATTERY_PIN A7
 #define BATTERY_THRESHOLD_VAULE 640//2v
-
+#define BAUD_RATE 115200
 
 #define LED_PIN 9
 #define LED2_PIN 10
@@ -96,9 +96,10 @@
 #include <avr/wdt.h>
 #include <SPI.h>
 //#include <Mirf.h>
-#include <nRF24L01.h>
-#include <RF24.h>
+#include "nRF24L01.h"
+#include "RF24.h"
 #include "printf.h"
+
 
 //rf trm part
 
@@ -215,7 +216,7 @@ int III_Get_Channel()
 	
 	if(analogRead(CHANNEL_2_PIN )>CHANNEL_THRESHOLD_VAULE )
 		result|=0x02;
-	Serial.begin(9600); 
+	Serial.begin(BAUD_RATE); 
 	Serial.print("CHANNEL NUMBER:");
 	Serial.println(result);
 	Serial.end();
@@ -230,7 +231,7 @@ int III_Get_Channel()
 	
 	if(analogRead(CHANNEL_2_PIN )>CHANNEL_THRESHOLD_VAULE )
 		result|=0x02;
-	Serial.begin(9600);
+	Serial.begin(BAUD_RATE);
 	Serial.print("CHANNEL NUMBER:");
 	Serial.println(result);
 	Serial.end();
@@ -247,7 +248,7 @@ void get_rf_frequncy()
 #else
 			 myChannel= III_Get_Channel();			
 #ifdef ONLINE_DEBUG
-			Serial.begin(9600);
+			Serial.begin(BAUD_RATE);
 			Serial.print("init_Channel:");
 			Serial.println(Mirf.channel);			
 			Serial.end();
@@ -264,20 +265,21 @@ void RF_24L01_Init()
 {
 	    role = role_receiver;
 
-#ifdef _DBG_RF11_INFO
 
-  Serial.begin(9600);
+
+  Serial.begin(BAUD_RATE);
   printf_begin();
   Serial.print(F("\n\rRF24/examples/pingpair_irq\n\rROLE: "));
   Serial.println(role_friendly_name[role]);
-#endif
+
   // Setup and configure rf radio
   radio.begin();  
   //radio.setPALevel(RF24_PA_LOW);
   radio.enableAckPayload();                         // We will be using the Ack Payload feature, so please enable it
   radio.enableDynamicPayloads();                    // Ack payloads are dynamic payloads
                                                     // Open pipes to other node for communication
-  if ( role == role_sender ) {                      // This simple sketch opens a pipe on a single address for these two nodes to 
+  if ( role == role_sender )
+  	{                      // This simple sketch opens a pipe on a single address for these two nodes to 
      radio.openWritingPipe(address[0]);             // communicate back and forth.  One listens on it, the other talks to it.
      radio.openReadingPipe(1,address[1]); 
   }else{
@@ -289,7 +291,7 @@ void RF_24L01_Init()
   }
   radio.printDetails();                             // Dump the configuration of the rf unit for debugging
   delay(50);
-   attachInterrupt( digitalPinToInterrupt(2), D2onChange, FALLING);             // Attach interrupt handler to interrupt #0 (using pin 2) on BOTH the sender and receiver
+   attachInterrupt(0, D2onChange, LOW);             // Attach interrupt handler to interrupt #0 (using pin 2) on BOTH the sender and receiver
 
 	
 }
@@ -345,44 +347,20 @@ void III_Rf_Init()
 void D2onChange()  
 {  
 
-	//	if(rf_state==READING_MODE)
-//	{
-//	     rCount++;
-//			while(wirelessSPI.available()) 
-//			{ //get data sent from transmit
-//				  wirelessSPI.read( &rBuffer, 2 ); //read one byte of data and store it in gotByte variable
-//			}
-
-//	}
-    bool tx,fail,rx;
+	
+  bool tx,fail,rx;
   radio.whatHappened(tx,fail,rx);                     // What happened?
   
-#ifdef _DBG_RF11_INFO
   if ( tx ) {                                         // Have we successfully transmitted?
-      if ( role == role_sender )
-	  	{ 
-	  
-		Serial.println(F("Send:OK"));
-	    }
-      if ( role == role_receiver )
-	  	{ 
-	  	Serial.println(F("Ack Payload:Sent")); 
-		
-	    }
+      if ( role == role_sender ){   Serial.println(F("Send:OK")); }
+      if ( role == role_receiver ){ Serial.println(F("Ack Payload:Sent")); }
   }
   
   if ( fail ) {                                       // Have we failed to transmit?
-      if ( role == role_sender )
-	  	{ 
-	  	Serial.println(F("Send:Failed")); 
-	    }
-      if ( role == role_receiver )
-	  	{ 
-	  	Serial.println(F("Ack Payload:Failed"));  
-	    }
+      if ( role == role_sender ){   Serial.println(F("Send:Failed"));  }
+      if ( role == role_receiver ){ Serial.println(F("Ack Payload:Failed"));  }
   }
-#endif
-
+  
   if ( rx || radio.available()){                      // Did we receive a message?
     
     if ( role == role_sender ) {                      // If we're the sender, we've received an ack payload
@@ -393,29 +371,22 @@ void D2onChange()
 
     
     if ( role == role_receiver ) {                    // If we're the receiver, we've received a time message
-     
+                     // Get this payload and dump it
       radio.read( &rBuffer, sizeof(rBuffer) );
-	#ifdef STEP2STEP_DEBUG
-	  Serial.begin(9600);
-      Serial.print(F("Got data: "));
-      Serial.println(rBuffer[0]);
-	   Serial.println(rBuffer[1]);
-	  Serial.end();
-	  #endif
+//      Serial.print(F("Got "));
+//      Serial.print(rBuffer[0]);
+//      Serial.println(rBuffer[1]);
       radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
-	  rCount++;
-
-	  ++message_count;                                // packet counter
+      ++message_count;                                // packet counter
     }
   }
-  
 } 
 
 void III_Set_name()
 {
 	III_Get_myName();
 #ifdef _DEBUG_ONLINE
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
    Serial.print("myname:");
    Serial.println(myname);
 Serial.end();
@@ -452,34 +423,39 @@ Serial.end();
 
 
 }
-void setup() {
+
+
+
+void setup()
+{
   // put your setup code here, to run once:
 #ifdef DEBUGMODE 
-Serial.begin(9600);
-  Serial.begin(9600);
+Serial.begin(BAUD_RATE);
+
 //  Serial.print("Sender "); 
 //  Serial.print(CONFIGRATION); 
   Serial.print(" ver "); 
   Serial.println(VERISON); 
 Serial.end();
 #endif
-  attachInterrupt( digitalPinToInterrupt(2), D2onChange, FALLING);  
 
-  III_Set_name();
+
   get_rf_frequncy();
 
   III_Rf_Init();
+  
+  III_Set_name();
   pinMode(LED_PIN,OUTPUT);
   pinMode(LED2_PIN,OUTPUT);
 
   III_Control_LED(1);
   delay(200);
   III_Control_LED(0);
-  Serial.begin(9600);
-	   Serial.println("Son weak up!");  
-	     Serial.print(" ver "); 
-  Serial.println(VERISON); 
-Serial.end();
+//  Serial.begin(BAUD_RATE);
+//	   Serial.println("Son weak up!");  
+//	     Serial.print(" ver "); 
+//  Serial.println(VERISON); 
+//Serial.end();
  // wdt_enable(TIMEOUT);
   // attachInterrupt(0, Receive, FALLING);
 }
@@ -502,7 +478,7 @@ void rf_Send(char *str)
 //  if (!wirelessSPI.write( &msg, lens ))
 //  	{  //if the send fails let the user know over serial monitor
 //#ifdef ONLINE_DEBUG
-//Serial.begin(9600);
+//Serial.begin(BAUD_RATE);
 //	   Serial.println("packet delivery failed");  
 //Serial.end();
 //#endif
@@ -531,7 +507,7 @@ bool III_Get_Battery_State() // false means low power
   int valb;
   valb = analogRead(BATTERY_PIN );
  #ifdef DEBUGMODE
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
   Serial.print("Batter ADC:");
   Serial.println(valb);
 Serial.end();
@@ -609,7 +585,7 @@ bool III_Get_KeyState()
 { int result;
   result=analogRead(BEAT_PIN);
 #ifdef DEBUGMODE
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
   Serial.print("get key state :");
   Serial.println(result);
 Serial.end();
@@ -745,7 +721,8 @@ _test();
 
 #ifdef STEP2STEP_DEBUG
   //Serial.print("ss");
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
+	Serial.print("got:");
 
     Serial.println(Temp);
 Serial.end();
@@ -783,10 +760,10 @@ Serial.end();
 
     }
     
-    else if ((char)rBuffer[0] == '+') //check online & power level
+    else if (rBuffer[0] == 43)//+ //check online & power level +
     {
 
-      if ((char)rBuffer[1] == KEY_BIT)
+      if (rBuffer[1] ==49 )//TBD KEY_BIT)
       {
       #if 1
 	  char sd[2];
@@ -858,7 +835,7 @@ Serial.end();
     if (get_key())
     {
 #ifdef STEP2STEP_DEBUG
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
       Serial.println(KEY_BIT);
 Serial.end();
 #endif
@@ -871,7 +848,7 @@ Serial.end();
 
 
   }
-  delay(2);
+ // delay(2);
 #ifdef SLEEP_TEST
   ////////debug sleep mode 
    III_Control_LED(1);
