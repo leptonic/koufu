@@ -16,8 +16,8 @@
 //#define _DEBUG_ONLINE 10
 #define _DBG_STATIC_FREQNCY 12
 //#define _DBG_RF11_INFO		  17
-
-
+#define READING_MODE false
+#define WRITING_MODE true
 
 #define ZQ_T 'A'
 #define ZQ_O '1'
@@ -82,8 +82,7 @@
 //#endif
 
 
-#define READING_MODE false
-#define WRITING_MODE true
+
 
 #define VOTLAGE_VALUE  292
 #define BASE_FREQUNCY   90
@@ -108,8 +107,8 @@ const int pinCSN = 7; //This pin is used to tell the nRF24 whether the SPI commu
 
 volatile byte rBuffer[2]; 
 
-bool rf_state=READING_MODE;
-int rCount;
+
+volatile int rCount;
 RF24 radio(pinCE, pinCSN); // Create your nRF24 object or wireless SPI connection
 byte address[][5] = { 0xCC,0xCE,0xCC,0xCE,0xCC , 0xCE,0xCC,0xCE,0xCC,0xCE};
 
@@ -264,9 +263,6 @@ void get_rf_frequncy()
 void RF_24L01_Init()
 {
 	    role = role_receiver;
-
-
-
   Serial.begin(BAUD_RATE);
   printf_begin();
   Serial.print(F("\n\rRF24/examples/pingpair_irq\n\rROLE: "));
@@ -287,7 +283,7 @@ void RF_24L01_Init()
     radio.openReadingPipe(1,address[0]);
     radio.startListening();
     radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
-    ++message_count;        
+    //++message_count;        
   }
   radio.printDetails();                             // Dump the configuration of the rf unit for debugging
   delay(50);
@@ -297,8 +293,28 @@ void RF_24L01_Init()
 }
 void RF_reset()
 {
-//    wirelessSPI.powerDown();
-//	delay(100);
+    radio.powerDown();	
+	delay(50);
+radio.begin();	
+//radio.setPALevel(RF24_PA_LOW);
+radio.enableAckPayload();						  // We will be using the Ack Payload feature, so please enable it
+radio.enableDynamicPayloads();					  // Ack payloads are dynamic payloads
+												  // Open pipes to other node for communication
+if ( role == role_sender )
+  { 					 // This simple sketch opens a pipe on a single address for these two nodes to 
+   radio.openWritingPipe(address[0]);			  // communicate back and forth.  One listens on it, the other talks to it.
+   radio.openReadingPipe(1,address[1]); 
+      radio.stopListening();
+}
+else
+	{
+  radio.openWritingPipe(address[1]);
+  radio.openReadingPipe(1,address[0]);
+  radio.startListening();
+  radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
+  //++message_count;		
+}
+
 //	 wirelessSPI.powerUp();
 //	wirelessSPI.begin();			 //Start the nRF24 module
 //		  wirelessSPI.setChannel(BASE_FREQUNCY-myChannel*20);
@@ -315,25 +331,25 @@ void RF_reset()
 }
 void SetRF_Mode(bool pWorkingMode)
 {
-		rf_state=pWorkingMode;
+	if(pWorkingMode)// sender
+	   {
+	   
+		if(role != role_sender)
+		   {
+			 role=role_sender;
+			 RF_reset();
+		   }
+	   }
+	else // receiver
+	   {
+  
+		if(role == role_sender)
+		   {
+			   role = role_receiver;
+			   RF_reset();
+		   }
+	   }
 	
-		if(pWorkingMode)// sender
-			{
-	//		RF_reset();
-	//			 wirelessSPI.stopListening();		  //transmitter so stop listening for data
-			role=role_sender;
-	
-			}
-		 else // receiver
-			{
-	//		RF_reset();
-			rCount=0;
-			rBuffer[0]=0;
-			 rBuffer[1]=0;	
-			 role = role_receiver;
-			 
-	//			  wirelessSPI.startListening(); 				// Start listening for messages
-			}
 
 }
 
@@ -347,18 +363,30 @@ void III_Rf_Init()
 void D2onChange()  
 {  
 
-	
   bool tx,fail,rx;
   radio.whatHappened(tx,fail,rx);                     // What happened?
-  
+  rCount++;
   if ( tx ) {                                         // Have we successfully transmitted?
-      if ( role == role_sender ){   Serial.println(F("Send:OK")); }
-      if ( role == role_receiver ){ Serial.println(F("Ack Payload:Sent")); }
+      if ( role == role_sender ){ 
+//	  	Serial.println(F("Send:OK")); 
+	  		}
+      if ( role == role_receiver )
+	  	{
+//	  	Serial.println(F("Ack Payload:Sent")); 
+			
+
+	  }
   }
-  
+//  
   if ( fail ) {                                       // Have we failed to transmit?
-      if ( role == role_sender ){   Serial.println(F("Send:Failed"));  }
-      if ( role == role_receiver ){ Serial.println(F("Ack Payload:Failed"));  }
+      if ( role == role_sender ){  
+//	  	Serial.println(F("Send:Failed")); 
+	  }
+      if ( role == role_receiver ){ 
+	  	
+		
+//	  	Serial.println(F("Ack Payload:Failed")); 
+	  }
   }
   
   if ( rx || radio.available()){                      // Did we receive a message?
@@ -372,10 +400,9 @@ void D2onChange()
     
     if ( role == role_receiver ) {                    // If we're the receiver, we've received a time message
                      // Get this payload and dump it
-      radio.read( &rBuffer, sizeof(rBuffer) );
-//      Serial.print(F("Got "));
-//      Serial.print(rBuffer[0]);
-//      Serial.println(rBuffer[1]);
+      radio.read( &rBuffer, sizeof(rBuffer) );  
+	 
+     
       radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
       ++message_count;                                // packet counter
     }
@@ -385,9 +412,9 @@ void D2onChange()
 void III_Set_name()
 {
 	III_Get_myName();
-#ifdef _DEBUG_ONLINE
+#if 1//def _DEBUG_ONLINE
 Serial.begin(BAUD_RATE);
-   Serial.print("myname:");
+   Serial.print("Myname:");
    Serial.println(myname);
 Serial.end();
 #endif
@@ -438,6 +465,7 @@ Serial.begin(BAUD_RATE);
   Serial.println(VERISON); 
 Serial.end();
 #endif
+ 
 
 
   get_rf_frequncy();
@@ -458,13 +486,16 @@ Serial.end();
 //Serial.end();
  // wdt_enable(TIMEOUT);
   // attachInterrupt(0, Receive, FALLING);
+  rCount=0;
+  message_count=0;
+
 }
 
 void rf_Send(char *str)
 {
  int lens;
-
-//  SetRF_Mode(WRITING_MODE);
+if(role != role_sender)
+  SetRF_Mode(WRITING_MODE);
   
   lens = strlen(str);
 
@@ -704,33 +735,19 @@ void loop()
 _test();
  
  #else // working mode
+ if(role == role_sender)
  SetRF_Mode(READING_MODE);
-	
-      
+
+
+
   if(rCount>0)
   {
-	rCount=0;
 
-#if   1
-    int i;  
-    String Temp;
-    for (i = 0; i <  2 ; i++)
-    {
-      Temp += char(rBuffer[i]);
-    }
-
-#ifdef STEP2STEP_DEBUG
-  //Serial.print("ss");
-Serial.begin(BAUD_RATE);
-	Serial.print("got:");
-
-    Serial.println(Temp);
-Serial.end();
-  
-#endif
-
-#endif
-
+//Serial.begin(BAUD_RATE);
+//	Serial.print(F("Gotl "));
+//		Serial.print(rBuffer[0]);
+//		Serial.println(rBuffer[1]);
+//Serial.end();
 
     if (rBuffer[0] == '%') //beat
     {
@@ -759,18 +776,21 @@ Serial.end();
       }
 
     }
-    
-    else if (rBuffer[0] == 43)//+ //check online & power level +
+
+    else if (rBuffer[0] == '+')//+ //check online & power level +
     {
 
-      if (rBuffer[1] ==49 )//TBD KEY_BIT)
+      if (rBuffer[1] == KEY_BIT)
       {
+
       #if 1
 	  char sd[2];
 	   sd[0] = '$';
 	   sd[1] = KEY_BIT;
+	  delay(100);
 	   rf_Send(sd);
 	   
+
 	    III_Control_LED(1);
        delay(50);
        III_Control_LED(0);
@@ -827,6 +847,11 @@ Serial.end();
 
       }
     }// +++
+
+  rCount=0;
+  rBuffer[0]=0;
+  rBuffer[1]=0;  
+
     
   }
 

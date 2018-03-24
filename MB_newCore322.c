@@ -47,7 +47,7 @@
 #define GAME_MODE_SINGLE  10
 #define GAME_MODE_ROUND   11
 #define GAME_MODE_ERROR    13
-
+#define BAUD_RATE 9600
 
 #define BASE_FREQUNCY   90
 #define SPEED_DATA_RATES 0x0e// 0x06 7 1M 0x0f 2M 
@@ -165,8 +165,8 @@ const int pinCE = 8; //This pin is used to set the nRF24 to standby (0) or activ
 const int pinCSN = 7; //This pin is used to tell the nRF24 whether the SPI communication is a command or message to send out
 
 volatile byte rBuffer[2]; 
-int rCount;
-bool rf_state=WRITING_MODE;
+volatile int rCount;
+
 
 RF24 radio(pinCE, pinCSN); // Create your nRF24 object or wireless SPI connection
 byte address[][5] = { 0xCC,0xCE,0xCC,0xCE,0xCC , 0xCE,0xCC,0xCE,0xCC,0xCE};
@@ -224,7 +224,7 @@ bool III_Get_Battery_State() // false means low power
   int valb;
   valb = analogRead(BATTERY_PIN );
  #ifdef DEBUG
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
   Serial.print("Batter ADC:");
   Serial.println(valb);
 Serial.end();
@@ -264,14 +264,14 @@ int III_Get_Channel()
 #ifdef DEBUG
 	int result;
 	result=analogRead(CHANNEL_1_PIN );
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
 	Serial.print("dbChannel 1:");
 	Serial.println(result);
 Serial.end();
 	delay(1000);
 	
 	result=analogRead(CHANNEL_2_PIN  );
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
 	Serial.print("dbChannel 2:");
 	Serial.println(result);
 Serial.end();
@@ -319,7 +319,7 @@ void II_Play_S1_start()//zhinengleiba kaiqi
 {
 	
 #ifdef STEP2STEP_DEBUG
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
 	Serial.println("II_Play_S1_start");
 Serial.end();
 #endif
@@ -398,7 +398,7 @@ void II_Play_S5_welcome()
 {
 	
 #ifdef STEP2STEP_DEBUG	
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
 	Serial.println("II_Play_S5_welcome");
 Serial.end();
 #endif
@@ -411,7 +411,7 @@ void II_Play_S7_startword()
 	bt_upload_state_withoutack();
 
 #ifdef STEP2STEP_DEBUG
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
 	Serial.println("II_Play_S7_startword");
 Serial.end();
 #endif
@@ -454,7 +454,7 @@ void II_Play_foot_L()
 void II_Play_S25_again()
 {
 #ifdef STEP2STEP_DEBUG
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
 	Serial.println("II_Play_S25_again");
 Serial.end();
 #endif
@@ -463,7 +463,7 @@ Serial.end();
 void II_Play_S2_BT_connectOK()
 {
 #ifdef STEP2STEP_DEBUG
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
 	Serial.println("II_Play_S2_BT_connectOK");
 Serial.end();
 #endif
@@ -473,7 +473,7 @@ Serial.end();
 void II_Play_s22_BT_disconnect()
 {
 #ifdef STEP2STEP_DEBUG
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
 	Serial.println("II_Play_s22_BT_disconnect");
 Serial.end();
 #endif
@@ -486,7 +486,7 @@ void II_Play_S23_Closing()
 void II_Play_S24_Select_mode()
 {
 #ifdef STEP2STEP_DEBUG
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
 	Serial.println("II_Play_S24_Select_mode");
 Serial.end();
 #endif
@@ -499,7 +499,7 @@ void II_Play_S6_start_QuanPuwords()
 
   result = random(1, 5);// 9 targets version
 #ifdef  STEP2STEP_DEBUG
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
   Serial.print("QuanPu-");
 
   Serial.println(result);
@@ -542,7 +542,7 @@ void II_Play_S6_G4()
 }
 void II_Play_SX_Error_TargetPower()
 {
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
   Serial.print("#TARGET_OFF#");
 Serial.end();
 
@@ -687,6 +687,8 @@ int _atoi(char a)
 void w_Send_oneSignal(int type, int num)
 {
   char sd[2];
+ 
+	SetRF_Mode(WRITING_MODE);
 
   if (type == BT)
   {
@@ -1022,7 +1024,7 @@ void set_volume_silence()// aa 13 01 1e dc max
 void set_volume()// aa 13 01 1e dc max
 {
 #ifdef STEP2STEP_DEBUG
-	Serial.begin(9600);
+	Serial.begin(BAUD_RATE);
 		Serial.println("_set_volume");
 	Serial.end();
 #endif
@@ -1184,7 +1186,7 @@ bool  gCheck_Section_Select(int random_in)
 void gSection_Select_outspaker()
 {
 #ifdef ONLINE_DEBUG
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
   Serial.print("ss=");
   Serial.println(SectionSelect);
 Serial.end();
@@ -1196,7 +1198,7 @@ Serial.end();
     if ((SectionSelect & 0x08) || (SectionSelect & 0xf0))
     {
 #ifdef  ONLINE_DEBUG
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
       Serial.println("Round Mode");
 Serial.end();
 #endif
@@ -1205,7 +1207,7 @@ Serial.end();
     else
     {
 #ifdef  ONLINE_DEBUG
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
       Serial.println("Single Mode");
 Serial.end();
 #endif
@@ -1362,7 +1364,7 @@ void bt_sendData(int data) //bt send part TBD
   work_state = STATE_BLUETOOTH;
   II_Play_btsend();
 
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
   Serial.print(data);
 Serial.end();
   work_state = STATE_IDEA;
@@ -1372,7 +1374,7 @@ Serial.end();
 void bt_receivedata()
 {
 
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
   while (Serial.available() > 0)
   {
     comdata += char(Serial.read());
@@ -1415,7 +1417,7 @@ void check_targetOnline_withVoice()
   // if command over state than report error to app and set state as real state.
 #ifdef STEP2STEP_DEBUG
 	 
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
   Serial.println(SectionSelect);
   Serial.println(state);
 Serial.end();
@@ -1426,7 +1428,7 @@ Serial.end();
   if (!check_state_error(SectionSelect, state))
   {
  #ifdef STEP2STEP_DEBUG
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
     Serial.println("Error: Too many targets was selected!");
 Serial.end();
  #endif
@@ -1446,14 +1448,14 @@ Serial.end();
 void bt_sendError()
 {
   work_state = STATE_BLUETOOTH;
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
   Serial.print(0xff);
 Serial.end();
   byte state = (byte)get_who_is_online();
 
   // II_Play_btsend();
 
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
   Serial.print(state);
 Serial.end();
   work_state = STATE_IDEA;
@@ -1467,7 +1469,7 @@ void bt_sendState()
 
   // II_Play_btsend();
 
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
   Serial.print(state);
 Serial.end();
   work_state = STATE_IDEA;
@@ -1537,70 +1539,52 @@ if(III_Get_Battery_State())
 }
 void D2onChange()  
 {  
-
-//	if(rf_state==READING_MODE)
-//	{
-//	     rCount++;
-//			while(wirelessSPI.available()) 
-//			{ //get data sent from transmit
-//				  wirelessSPI.read( &rBuffer, 2 ); //read one byte of data and store it in gotByte variable
-//			}
-
-//	}
-    bool tx,fail,rx;
-  radio.whatHappened(tx,fail,rx);                     // What happened?
-  
-#ifdef _DBG_RF11_INFO
-  if ( tx ) {                                         // Have we successfully transmitted?
-      if ( role == role_sender )
-	  	{ 
+	
+	  bool tx,fail,rx;
+	  radio.whatHappened(tx,fail,rx);					  // What happened?
+//	  rCount++;
+	  if ( tx ) {										  // Have we successfully transmitted?
+		  if ( role == role_sender ){ 
+	//		Serial.println(F("Send:OK")); 
+				}
+		  if ( role == role_receiver )
+			{
+	//		Serial.println(F("Ack Payload:Sent")); 
+				
+	
+		  }
+	  }
+	//	
+	  if ( fail ) { 									  // Have we failed to transmit?
+		  if ( role == role_sender ){  
+	//		Serial.println(F("Send:Failed")); 
+		  }
+		  if ( role == role_receiver ){ 
+			
+			
+	//		Serial.println(F("Ack Payload:Failed")); 
+		  }
+	  }
 	  
-		Serial.println(F("Send:OK"));
-	    }
-      if ( role == role_receiver )
-	  	{ 
-	  	Serial.println(F("Ack Payload:Sent")); 
+	  if ( rx || radio.available()){					  // Did we receive a message?
 		
-	    }
-  }
-  
-  if ( fail ) {                                       // Have we failed to transmit?
-      if ( role == role_sender )
-	  	{ 
-	  	Serial.println(F("Send:Failed")); 
-	    }
-      if ( role == role_receiver )
-	  	{ 
-	  	Serial.println(F("Ack Payload:Failed"));  
-	    }
-  }
-#endif
+		if ( role == role_sender ) {					  // If we're the sender, we've received an ack payload
+		    radio.read(&message_count,sizeof(message_count));
+	//		  Serial.print(F("Ack: "));
+	//		  Serial.println(message_count);
+		}
+	
+		
+		if ( role == role_receiver ) {					  // If we're the receiver, we've received a time message
+						 // Get this payload and dump it
+		  radio.read( &rBuffer, sizeof(rBuffer) );	
+		 
+		 rCount++;
+		  radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
+		  ++message_count;								  // packet counter
+		}
+	  }
 
-  if ( rx || radio.available()){                      // Did we receive a message?
-    
-    if ( role == role_sender ) {                      // If we're the sender, we've received an ack payload
-        radio.read(&message_count,sizeof(message_count));
-//        Serial.print(F("Ack: "));
-//        Serial.println(message_count);
-    }
-
-    
-    if ( role == role_receiver ) {                    // If we're the receiver, we've received a time message
-     
-      radio.read( &rBuffer, sizeof(rBuffer) );
-	#ifdef STEP2STEP_DEBUG
-	  Serial.begin(9600);
-      Serial.print(F("Got data: "));
-      Serial.println(rBuffer[0]);
-	   Serial.println(rBuffer[1]);
-	  Serial.end();
-	  #endif
-      radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
-	  rCount++;
-
-	  ++message_count;                                // packet counter
-    }
-  }
 } 
 
 int get_who_is_online()//
@@ -1614,48 +1598,55 @@ int get_who_is_online()//
   int q;
   result = 0;
   // first check itself 
-  do_Battery_check();
+//  do_Battery_check();
  // for(q=0;q<3;q++)
   	{
   for (i = 1; i < 7; i++)
   {
 
-    delay(500);
+    delay(1000);
 
 //	if((result&(0x01 << (i - 1)))==1)
 //		continue;
-	for (j = 0; j < 3; j++)
+	//for (j = 0; j < 3; j++)
     {
 
+		delay(100);
 
-#ifdef  STEP2STEP_DEBUG
-			Serial.begin(9600);
-		 Serial.print("+"); 		  
-			Serial.end();
-#endif
-	SetRF_Mode(WRITING_MODE);
+//#ifdef  STEP2STEP_DEBUG
+//			Serial.begin(BAUD_RATE);
+//		 Serial.print("i=");
+//		 Serial.println(i);
+//		 
+//			Serial.end();
+//#endif
+
 	  w_Send_oneSignal(CK, i);// Direct bit target
-#ifdef  STEP2STEP_DEBUG
-			Serial.begin(9600);
-		  Serial.print("o");		   
-			Serial.end();
-#endif
-
-	 timeout = 0;
-     delay(20);
+//#ifdef  STEP2STEP_DEBUG
+//			Serial.begin(BAUD_RATE);
+//		  Serial.print("o");		   
+//			Serial.end();
+//#endif
 	
-	 
+	 timeout = 0;
+//     delay(20);
+	
+
 		SetRF_Mode(READING_MODE);
 	
-      while ((timeout < 550)&&(rCount==0))
-      {
+//      while ((timeout < 550)&&(rCount==0))
+	while(rCount==0)
+	{
 
-        timeout++;
+//        timeout++;
 		delay(1);
       }
 	  if(rCount>0)
 	  	{
-	  	rCount=0;
+Serial.begin(BAUD_RATE);
+	 Serial.print("timeout:"); 	
+	 Serial.println(timeout);
+Serial.end();
 		//Serial.begin();
 				if (rBuffer[0] == '$')
 				{
@@ -1663,41 +1654,45 @@ int get_who_is_online()//
 				  {
 					result |= 0x01 << (i - 1);
 #ifdef  STEP2STEP_DEBUG
-		Serial.begin(9600);
+		Serial.begin(BAUD_RATE);
 				   Serial.print("get :");
 				  Serial.println(i);
 			  Serial.println(result);
 		Serial.end();
 #endif
-					j=4;
+					
 	  //		  w_Send_oneSignal(VT, i);
-//				   goto NextTarget;
+				j=4;//	goto NextTarget;
 				  }
 				  else if (rBuffer[1] == 'L')
 				  {
 	  
 	  
 #ifdef  STEP2STEP_DEBUG
-				Serial.begin(9600);
+				Serial.begin(BAUD_RATE);
 					Serial.print("LowPower : ");
 					Serial.println(i);
 				Serial.end();
 #endif
 	  
 					III_Play_Who_LowPower(i);
-					j=4;
+					
 	  //			w_Send_oneSignal(VT, i);
-//					goto NextTarget;  // v190 Repeat 1 times for low power
+					j=4;//goto NextTarget;  // v190 Repeat 1 times for low power
 				  }
 				}
-				
+		  rCount=0;
+  		  rBuffer[0]=0;
+ 		  rBuffer[1]=0;  		
 
 	  }
 	  else
 	  	{
 	     
 #ifdef  STEP2STEP_DEBUG
-				Serial.begin(9600);
+				Serial.begin(BAUD_RATE);
+		   Serial.print(i); 
+
 		   Serial.print(".");			
 				Serial.end();
 #endif		
@@ -1833,7 +1828,7 @@ void get_rf_frequncy()
 			 myChannel= III_Get_Channel();
 				
 #ifdef ONLINE_DEBUG
-		Serial.begin(9600);
+		Serial.begin(BAUD_RATE);
 			Serial.print("init_Channel:");
 			Serial.println(Mirf.channel);
 		Serial.end();
@@ -1846,42 +1841,63 @@ void get_rf_frequncy()
 }
 void RF_24L01_Init()
 {
-	    role = role_sender;
-
+	role = role_sender;	
 #ifdef _DBG_RF11_INFO
-
-  Serial.begin(9600);
-  printf_begin();
-  Serial.print(F("\n\rRF24/examples/pingpair_irq\n\rROLE: "));
-  Serial.println(role_friendly_name[role]);
-#endif
-  // Setup and configure rf radio
-  radio.begin();  
-  //radio.setPALevel(RF24_PA_LOW);
-  radio.enableAckPayload();                         // We will be using the Ack Payload feature, so please enable it
-  radio.enableDynamicPayloads();                    // Ack payloads are dynamic payloads
-                                                    // Open pipes to other node for communication
-  if ( role == role_sender ) {                      // This simple sketch opens a pipe on a single address for these two nodes to 
-     radio.openWritingPipe(address[0]);             // communicate back and forth.  One listens on it, the other talks to it.
-     radio.openReadingPipe(1,address[1]); 
-  }else{
-    radio.openWritingPipe(address[1]);
-    radio.openReadingPipe(1,address[0]);
-    radio.startListening();
-    radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
-    ++message_count;        
-  }
-  radio.printDetails();                             // Dump the configuration of the rf unit for debugging
-  delay(50);
-   attachInterrupt( digitalPinToInterrupt(2), D2onChange, LOW);             // Attach interrupt handler to interrupt #0 (using pin 2) on BOTH the sender and receiver
-
+	Serial.begin(BAUD_RATE);
+	printf_begin();
+	Serial.print(F("\n\rRF24/examples/pingpair_irq\n\rROLE: "));
+	Serial.println(role_friendly_name[role]);
 	
+#endif
+	// Setup and configure rf radio
+	radio.begin();	
+	//radio.setPALevel(RF24_PA_LOW);
+	radio.enableAckPayload();						  // We will be using the Ack Payload feature, so please enable it
+	radio.enableDynamicPayloads();					  // Ack payloads are dynamic payloads
+													  // Open pipes to other node for communication
+	if ( role == role_sender )
+	  { 					 // This simple sketch opens a pipe on a single address for these two nodes to 
+	   radio.openWritingPipe(address[0]);			  // communicate back and forth.  One listens on it, the other talks to it.
+	   radio.openReadingPipe(1,address[1]); 
+	}else{
+	  radio.openWritingPipe(address[1]);
+	  radio.openReadingPipe(1,address[0]);
+	  radio.startListening();
+	  radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
+	  //++message_count;		
+	}
+#ifdef _DBG_RF11_INFO
+	radio.printDetails();							  // Dump the configuration of the rf unit for debugging
+#endif
+	delay(50);
+	 attachInterrupt(0, D2onChange, LOW);			  // Attach interrupt handler to interrupt #0 (using pin 2) on BOTH the sender and receiver
 
 }
 void RF_reset()
 {
-//    wirelessSPI.powerDown();
-//	delay(100);
+    radio.powerDown();	
+	delay(50);
+
+radio.begin();	
+//radio.setPALevel(RF24_PA_LOW);
+radio.enableAckPayload();						  // We will be using the Ack Payload feature, so please enable it
+radio.enableDynamicPayloads();					  // Ack payloads are dynamic payloads
+												  // Open pipes to other node for communication
+if ( role == role_sender )
+  { 					 // This simple sketch opens a pipe on a single address for these two nodes to 
+   radio.openWritingPipe(address[0]);			  // communicate back and forth.  One listens on it, the other talks to it.
+   radio.openReadingPipe(1,address[1]); 
+      radio.stopListening();
+}
+else
+	{
+  radio.openWritingPipe(address[1]);
+  radio.openReadingPipe(1,address[0]);
+  radio.startListening();
+  radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
+  //++message_count;		
+}
+
 //	 wirelessSPI.powerUp();
 //	wirelessSPI.begin();			 //Start the nRF24 module
 //		  wirelessSPI.setChannel(BASE_FREQUNCY-myChannel*20);
@@ -1897,29 +1913,32 @@ void RF_reset()
 
 }
 
+
 void SetRF_Mode(bool pWorkingMode)
 {
+	    if(pWorkingMode)// sender
+			{
+			
+		 	 if(role != role_sender)
+		 	 	{
+				  role=role_sender;
+				  RF_reset();
+		 	 	}
+			}
+		 else // receiver
+			{
+		
+			 if(role != role_receiver)
+			 	{
+				    role = role_receiver;
+				 	RF_reset();
+					
+			 	}
+			}
 
-	rf_state=pWorkingMode;
 
-	if(pWorkingMode)// sender
-		{
-//		RF_reset();
-//			 wirelessSPI.stopListening();		  //transmitter so stop listening for data
-		role=role_sender;
-
-		}
-	 else // receiver
-	 	{
-//	 	RF_reset();
-	 	rCount=0;
-	 	rBuffer[0]=0;
-	     rBuffer[1]=0;	
-	 	 role = role_receiver;
-		 
-//	 		  wirelessSPI.startListening();                 // Start listening for messages
-	 	}
 }
+
 void RF_24L01_Frequency_Hopping(int channel)//channel must from 1-6 !!
 {
 
@@ -1994,7 +2013,7 @@ bool bt_pairing()// ture connected; false disconnect
       III_TrunON_All_LED();
     else
       III_TrunOFF_All_LED();
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
     while (Serial.available() > 0)
     {
       comdata += char(Serial.read());
@@ -2013,7 +2032,7 @@ Serial.end();
 		comdata="";
         backdata.concat(ID);
         backdata.concat("#");
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
         Serial.println(backdata);
 Serial.end();
         return true;
@@ -2024,7 +2043,7 @@ Serial.end();
 		  backdata.concat("#");
 		  backdata.concat(VERION);				
 		  backdata.concat("#");
-	Serial.begin(9600);
+	Serial.begin(BAUD_RATE);
 		  Serial.println(backdata);
 	Serial.end();
 		  comdata="";
@@ -2063,11 +2082,11 @@ SELECTBIGIN:
     backdata = "";
       backdata.concat("#");	  
       backdata.concat(SectionSelect);
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
       Serial.println(backdata);
 Serial.end();
     }
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
     while (Serial.available() > 0)
     {
       comdata += char(Serial.read());
@@ -2111,7 +2130,7 @@ Serial.end();
   }
   //get the command for APP
 #ifdef STEP2STEP_DEBUG
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
   Serial.println("@S##");
 Serial.end();
 #endif
@@ -2123,7 +2142,7 @@ Serial.end();
     {
       delay(2);
       timeout++;
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
       while (Serial.available() > 0)
       {
         comdata += char(Serial.read());
@@ -2140,7 +2159,7 @@ Serial.end();
           SectionSelect = (byte)ss1;//ss-48;
           backdata = "";
           backdata.concat("ACK#OK#");
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
           Serial.println(backdata);
 Serial.end();
           return true;
@@ -2194,12 +2213,12 @@ bool bt_upload_data()// 0 means no respond.
       itoa(total_record, backrecord, 10);
       backdata.concat(backrecord);
       backdata.concat("#");
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
       Serial.println(backdata);
 Serial.end();
     }
 
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
     while (Serial.available() > 0)
     {
       comdata += char(Serial.read());
@@ -2244,7 +2263,7 @@ bool Force_share_information_action()// 1 have shared 0 exit //v197 add
 		
 		   timeout++;
 		  
-	Serial.begin(9600);
+	Serial.begin(BAUD_RATE);
 		   while (Serial.available() > 0)
 		   {
 			 comdata += char(Serial.read());
@@ -2281,7 +2300,7 @@ void bt_upload_state_withoutack()// 0 means no respond.
   String backdata;
   backdata = "";
   backdata.concat("#ACKTION#");
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
   Serial.println(backdata);
 Serial.end();
 
@@ -2292,7 +2311,7 @@ void bt_upload_begin_withoutack()// 0 means no respond.
   String backdata;
     backdata = "";
       backdata.concat("#START#");
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
       Serial.println(backdata);
 Serial.end();
 
@@ -2304,7 +2323,7 @@ void bt_upload_next_withoutack()// 0 means no respond.
   String backdata;
     backdata = "";
       backdata.concat("#NEXT#");
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
       Serial.println(backdata);
 Serial.end();
  
@@ -2316,7 +2335,7 @@ void bt_upload_select_withoutack()// 0 means no respond.
   String backdata;
     backdata = "";
       backdata.concat("#SELECTMODE#");
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
       Serial.println(backdata);
 Serial.end();
  
@@ -2340,7 +2359,7 @@ void bt_Throwout_Error_withoutack()// 0 means no respond.//v1.8
 
       backdata = "";
       backdata.concat("#RESET#");
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
       Serial.println(backdata);
 Serial.end();
     }
@@ -2367,12 +2386,12 @@ bool bt_upload_LowPower()// 0 means no respond.
 
       backdata = "";
       backdata.concat("#LOWPOWER#");
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
       Serial.println(backdata);
 Serial.end();
     }
 
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
     while (Serial.available() > 0)
     {
       comdata += char(Serial.read());
@@ -2412,12 +2431,12 @@ bool bt_upload_state()// 0 means no respond.
 
       backdata = "";
       backdata.concat("#ACKTION#");
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
       Serial.println(backdata);
 Serial.end();
     }
 
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
     while (Serial.available() > 0)
     {
       comdata += char(Serial.read());
@@ -2494,7 +2513,7 @@ void test_bt_upload()
   total_record = 249;
   if (bt_upload_data())
   {
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
     Serial.println("uploaded");
 Serial.end();
     comdata = "";
@@ -2502,7 +2521,7 @@ Serial.end();
   }
   else
   {
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
     Serial.println("ul_disconnected");
 Serial.end();
   }
@@ -2512,7 +2531,7 @@ void test_bt_pairing()
 
   if (bt_pairing())
   {
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
     Serial.println("connected");
 Serial.end();
     comdata = "";
@@ -2520,7 +2539,7 @@ Serial.end();
   }
   else
   {
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
     Serial.println("disconnected");
 Serial.end();
   }
@@ -2529,19 +2548,19 @@ void test_bt_upload_state()
 {
   if (bt_upload_state())
   {
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
     Serial.println("upload state ok");
 Serial.end();
   }
   else
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
     Serial.println("upload state fail.");
 Serial.end();
 
 }
 void test_bt_selectMode()
 {
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
   SectionSelect = 0x00;
   if (bt_Select_Mode())
   {
@@ -2776,9 +2795,9 @@ void setup() {
   randomSeed(analogRead(A7));
 
   
-   ss.begin(9600);
+   ss.begin(BAUD_RATE);
  
-  Serial.begin(9600);
+  Serial.begin(BAUD_RATE);
   get_rf_frequncy();
 
   III_Rf_Init(0);
@@ -2854,17 +2873,43 @@ void setup() {
 }
 void _test()
 {
+
+//Serial.begin(BAUD_RATE);
+//Serial.println("stS");
 //=========test who is online
-w_Send_oneSignal(CK, 1);// Direct bit target
-delay(2000);
+//w_Send_oneSignal(CK, 1);// Direct bit target
+//delay(3000);
+//Serial.println("2");
+
+//w_Send_oneSignal(CK, 2);// Direct bit target
+//delay(3000);
+Serial.println("3");
+
+w_Send_oneSignal(CK, 3);// Direct bit target
+delay(3000);
+//Serial.println("4");
+
+//w_Send_oneSignal(CK, 4);// Direct bit target
+//delay(3000);
+//Serial.println("5");   
+//w_Send_oneSignal(CK, 5);// Direct bit target
+// delay(3000);
+//Serial.println("6");   
+//w_Send_oneSignal(CK, 6);// Direct bit target
+//delay(3000);
+
+   
+//Serial.end();
+// // get_who_is_online();
+
 //  String backdata = "";	
-//Serial.begin(9600);
+//Serial.begin(BAUD_RATE);
 //   Serial.println("start check who is online");
 //Serial.end();
 //	   SectionSelect = get_who_is_online();
 //	 backdata.concat("#");
 //		  backdata.concat(SectionSelect);
-//	Serial.begin(9600);
+//	Serial.begin(BAUD_RATE);
 //		  Serial.println(backdata);
 //	Serial.end();
 
@@ -2967,7 +3012,7 @@ void loop() {
     {
       II_Play_SX_Error_TargetPower();
 #ifdef  ONLINE_DEBUG
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
 	  Serial.print("SectionSelect=");
       Serial.println(SectionSelect);
       Serial.println("CantOpenTargetPower");
@@ -2978,7 +3023,7 @@ Serial.end();
 
     }
 #ifdef STEP2STEP_DEBUG
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
 	Serial.println("input ACK#OK#");
 Serial.end();
 #endif
@@ -3060,7 +3105,7 @@ Serial.end();
   else
   {
     //#error can't enter trainning mode ,target link error!!
-Serial.begin(9600);
+Serial.begin(BAUD_RATE);
     Serial.print("GAME_MODE_ERROR");
 Serial.end();
     system_reset();
