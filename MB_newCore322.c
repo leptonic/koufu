@@ -168,6 +168,7 @@ volatile byte rBuffer[2];
 volatile int rCount;
 
 
+
 RF24 radio(pinCE, pinCSN); // Create your nRF24 object or wireless SPI connection
 byte address[][5] = { 0xCC,0xCE,0xCC,0xCE,0xCC , 0xCE,0xCC,0xCE,0xCC,0xCE};
 
@@ -688,7 +689,7 @@ void w_Send_oneSignal(int type, int num)
 {
   char sd[2];
  
-	SetRF_Mode(WRITING_MODE);
+	SetRF_ModeM(WRITING_MODE);
 
   if (type == BT)
   {
@@ -1546,6 +1547,7 @@ void D2onChange()
 	  if ( tx ) {										  // Have we successfully transmitted?
 		  if ( role == role_sender ){ 
 	//		Serial.println(F("Send:OK")); 
+			
 				}
 		  if ( role == role_receiver )
 			{
@@ -1570,6 +1572,7 @@ void D2onChange()
 		
 		if ( role == role_sender ) {					  // If we're the sender, we've received an ack payload
 		    radio.read(&message_count,sizeof(message_count));
+			
 	//		  Serial.print(F("Ack: "));
 	//		  Serial.println(message_count);
 		}
@@ -1628,25 +1631,35 @@ int get_who_is_online()//
 //			Serial.end();
 //#endif
 	
-	 timeout = 0;
-//     delay(20);
 	
-
-		SetRF_Mode(READING_MODE);
+//     delay(20);
+#if 0
+		}}
+  return 1;
+{{
+#endif
+		SetRF_ModeM(READING_MODE);
 	
 //      while ((timeout < 550)&&(rCount==0))
-	while(rCount==0)
-	{
+//	while(radio.available()){		
+//		 radio.read(&rBuffer,2);
+//		 rCount++;
+//		}
+	   timeout = 0;
+	  while ((timeout < 2550)&&(rBuffer[1]==0))
+		{
+		timeout++;
+delay(1);
+	  }
 
-//        timeout++;
-		delay(1);
-      }
-	  if(rCount>0)
+	  if(rBuffer[1]!=0)
 	  	{
-Serial.begin(BAUD_RATE);
-	 Serial.print("timeout:"); 	
-	 Serial.println(timeout);
-Serial.end();
+//Serial.begin(BAUD_RATE);
+//	 Serial.print("timeout:"); 	
+//	 Serial.println(rBuffer[0]);
+//	 Serial.println(rBuffer[1]);
+//	 
+//Serial.end();
 		//Serial.begin();
 				if (rBuffer[0] == '$')
 				{
@@ -1839,7 +1852,7 @@ void get_rf_frequncy()
 
 
 }
-void RF_24L01_Init()
+void RF_24L01_InitM()
 {
 	role = role_sender;	
 #ifdef _DBG_RF11_INFO
@@ -1859,6 +1872,7 @@ void RF_24L01_Init()
 	  { 					 // This simple sketch opens a pipe on a single address for these two nodes to 
 	   radio.openWritingPipe(address[0]);			  // communicate back and forth.  One listens on it, the other talks to it.
 	   radio.openReadingPipe(1,address[1]); 
+	     radio.stopListening();
 	}else{
 	  radio.openWritingPipe(address[1]);
 	  radio.openReadingPipe(1,address[0]);
@@ -1873,10 +1887,10 @@ void RF_24L01_Init()
 	 attachInterrupt(0, D2onChange, LOW);			  // Attach interrupt handler to interrupt #0 (using pin 2) on BOTH the sender and receiver
 
 }
-void RF_reset()
+void RF_resetM()
 {
-    radio.powerDown();	
-	delay(50);
+//    radio.powerDown();	
+//	delay(50);
 
 radio.begin();	
 //radio.setPALevel(RF24_PA_LOW);
@@ -1914,7 +1928,7 @@ else
 }
 
 
-void SetRF_Mode(bool pWorkingMode)
+void SetRF_ModeM(bool pWorkingMode)
 {
 	    if(pWorkingMode)// sender
 			{
@@ -1922,16 +1936,16 @@ void SetRF_Mode(bool pWorkingMode)
 		 	 if(role != role_sender)
 		 	 	{
 				  role=role_sender;
-				  RF_reset();
+				  RF_resetM();
 		 	 	}
 			}
 		 else // receiver
 			{
-		
+
 			 if(role != role_receiver)
 			 	{
 				    role = role_receiver;
-				 	RF_reset();
+				 	RF_resetM();
 					
 			 	}
 			}
@@ -1995,7 +2009,7 @@ void RF_24L01_address_Hopping(int address)//channel must from 1-6 !!
 void III_Rf_Init(int paramter)
 {
 	
-	RF_24L01_Init();
+	RF_24L01_InitM();
 //	RF_24L01_address_Hopping(paramter);
 //	RF_24L01_Frequency_Hopping(paramter);
 
@@ -2883,10 +2897,10 @@ void _test()
 
 //w_Send_oneSignal(CK, 2);// Direct bit target
 //delay(3000);
-Serial.println("3");
+//Serial.println("3");
 
-w_Send_oneSignal(CK, 3);// Direct bit target
-delay(3000);
+//w_Send_oneSignal(CK, 3);// Direct bit target
+//delay(3000);
 //Serial.println("4");
 
 //w_Send_oneSignal(CK, 4);// Direct bit target
@@ -2902,16 +2916,16 @@ delay(3000);
 //Serial.end();
 // // get_who_is_online();
 
-//  String backdata = "";	
-//Serial.begin(BAUD_RATE);
-//   Serial.println("start check who is online");
-//Serial.end();
-//	   SectionSelect = get_who_is_online();
-//	 backdata.concat("#");
-//		  backdata.concat(SectionSelect);
-//	Serial.begin(BAUD_RATE);
-//		  Serial.println(backdata);
-//	Serial.end();
+  String backdata = "";	
+Serial.begin(BAUD_RATE);
+   Serial.println("start check who is online");
+Serial.end();
+	   SectionSelect = get_who_is_online();
+	 backdata.concat("#");
+		  backdata.concat(SectionSelect);
+	Serial.begin(BAUD_RATE);
+		  Serial.println(backdata);
+	Serial.end();
 
 //test_all_target();
 

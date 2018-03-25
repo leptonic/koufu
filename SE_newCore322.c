@@ -293,8 +293,8 @@ void RF_24L01_Init()
 }
 void RF_reset()
 {
-    radio.powerDown();	
-	delay(50);
+//    radio.powerDown();	
+//	delay(50);
 radio.begin();	
 //radio.setPALevel(RF24_PA_LOW);
 radio.enableAckPayload();						  // We will be using the Ack Payload feature, so please enable it
@@ -790,6 +790,10 @@ _test();
 	  delay(100);
 	   rf_Send(sd);
 	   
+Serial.begin(BAUD_RATE);
+	   Serial.print("+");
+	   Serial.println(KEY_BIT);
+Serial.end();
 
 	    III_Control_LED(1);
        delay(50);
