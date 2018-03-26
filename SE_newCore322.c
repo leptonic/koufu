@@ -5,7 +5,8 @@
 //v200 Add Sleep mode
 //v210 try to with TRM replace new libray to MIRF
 //230 another version new libray to TRM
-#define VERISON 230
+//232 implement TRM in global.
+#define VERISON 232
 //#define SLEEP_TEST 1
 //#define CONFIGRATION 1
 //#define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
@@ -787,7 +788,15 @@ _test();
 	  char sd[2];
 	   sd[0] = '$';
 	   sd[1] = KEY_BIT;
-	  delay(100);
+	    if (!III_Get_Battery_State())
+        {
+          sd[1] = 'L';
+        }
+        else
+        {
+          sd[1] = KEY_BIT;
+        }
+	  delay(50);
 	   rf_Send(sd);
 	   
 Serial.begin(BAUD_RATE);

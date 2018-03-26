@@ -14,8 +14,9 @@
 //219--117MB Merge single version"V198"
 //223 Merge single version v199""
 //228 add battery voltage check part TBD
-//230 try to with TRM replace new libray to MIRF
+//230 try to with TRM replace new  MIRF
 //240 another version new libray to TRM
+//242 implement TRM Plan in global
 #include <SoftwareSerial.h>
 #include <SPI.h>
 //#include <Mirf.h>
@@ -25,7 +26,7 @@
 
 //#include <MirfHardwareSpiDriver.h>
 
-#define VERION    240
+#define VERION    242
 #define DEBUG 11
 #define ONLINE_DEBUG 12
 #define STEP2STEP_DEBUG 13
@@ -48,6 +49,7 @@
 #define GAME_MODE_ROUND   11
 #define GAME_MODE_ERROR    13
 #define BAUD_RATE 9600
+#define GET_WHO_IS_ONLINE_TRYTIMES  550
 
 #define BASE_FREQUNCY   90
 #define SPEED_DATA_RATES 0x0e// 0x06 7 1M 0x0f 2M 
@@ -771,7 +773,7 @@ void  III_Switch_LED(bool sw, int i)
 
 void test_all_target()
 {
-#if 0
+#if 1 v242 revivify
   int  i;
 
   for (i = 1; i < 3; i++)
@@ -779,9 +781,10 @@ void test_all_target()
     delay(500);
     timeout = 0;
     w_Send_oneSignal(BT, i);
-    while (timeout < 205)
+    while ((timeout < 205)&&(rBuffer[1]!=0))
     {
       timeout++;
+    	}
      // byte data[Mirf.payload];
       if (!Mirf.isSending() && Mirf.dataReady())
       { //
@@ -795,6 +798,7 @@ void test_all_target()
         {
           Temp += char(data[ii]);
         }
+		Serial.begin(BAUD_RATE);
         Serial.println(i);
 
         if (data[0] == '$')
@@ -808,10 +812,12 @@ void test_all_target()
             break;
           }
         }
+	  Serial.end();
 
       }
       delay(5);
-    }
+	  
+    
 
   }
 #endif
@@ -1061,7 +1067,7 @@ void Sendcmd(byte  ps[], int sizef)
 }
 bool beat_bird_toSTART()
 {
-#if 0
+#if 1 //v242 revivify
   int random_i; 
   timeout = 0;
   //III_TrunOFF_All_LED();
@@ -1071,6 +1077,10 @@ bool beat_bird_toSTART()
   while (timeout < 64000)
   {
     timeout++;
+	if(timeout%600==0)
+	  bt_upload_state_withoutack();//v192
+	delay(5);
+  	}
 #if 0 // remove this region 
     random_i = timeout % 7 + 1;
     if (gCheck_Section_Select(random_i))
@@ -1079,24 +1089,20 @@ bool beat_bird_toSTART()
       III_TrunOFF_All_LED();
 #else
 	
-   if(timeout%600==0)
-	  bt_upload_state_withoutack();//v192
+   
 
 #endif
    // byte data[Mirf.payload];
-    if (!Mirf.isSending() && Mirf.dataReady())
-    {
-
-      Mirf.getData(data);
-
-
+	if(rBuffer[1]!=0)
+    {     
       int i;
       String Temp;
-      for (i = 0; i < Mirf.payload; i++)
+      for (i = 0; i < 2; i++)
       {
         Temp += char(data[i]);
       }
 #ifdef ONLINE_DEBUG
+	  Serial.begin(BAUD_RATE);
       Serial.println(Temp);
 #endif
 
@@ -1104,6 +1110,7 @@ bool beat_bird_toSTART()
       {
 #ifdef ONLINE_DEBUG
         Serial.println(">Beat Bird!");
+		Serial.end();
 #endif
         II_Play_beat1();
         III_TrunOFF_All_LED();
@@ -1114,8 +1121,8 @@ bool beat_bird_toSTART()
 
 
     }
-	delay(1);
-  }
+	else
+  
 #endif
   return false;
 
@@ -1264,7 +1271,7 @@ void play_ss_ForTarget(int iDirect)
 }
 bool  oneBeat(int key_in)
 {
-#if 0
+#if 1 //v242  revivify
   int direct;
   int i;
   int vkey;
@@ -1281,73 +1288,56 @@ bool  oneBeat(int key_in)
 
     //  delay(1000);
           timeout = 0;
-	  // Serial.print("s");
-//	  III_Rf_Init(0);
-	  while(Mirf.isSending()&&!Mirf.dataReady()&&timeout <200)
-	  	{
-	  	timeout++;
-         delay(20);
-	  	}
-#ifdef ONLINE_DEBUG
-	  if(timeout>198)
-	  	Serial.println("sw-timeout");
-#endif
-//	III_Rf_Init(0);
 
     w_Send_oneSignal(BT, key_in); //send data
-//      III_Rf_Init(0);
+	SetRF_ModeM(READING_MODE);
+
     timeout = 0;
-    while (timeout < 1009)
+  	while ((timeout < 1009)&&(rBuffer[1]==0))
     {
       timeout++;
-     // byte data[Mirf.payload];
-      if (!Mirf.isSending() && Mirf.dataReady())
-      {
+	  delay(1);
+  	}
 
-        Mirf.getData(data);
-
-        int i;
-        String Temp;
-        for (i = 0; i < Mirf.payload; i++)
-        {
-          Temp += char(data[i]);
-        }
-
-        if ((data[0] == '$') )
-        {
-          if (!sndr)
-          {
-            sndr = true;
-            if (timeout % 2 == 0)
-              II_Play_beat1();
-            else
-              II_Play_beat2();
-          }
-
-         if ((char)data[1] == _itoa(key_in))
-          {
- #ifdef  ONLINE_DEBUG
-          	Serial.print("g");
-            Serial.println(key_in);
+	if(timeout>1000)
+	{
+	//TODO HAVN'T BEAT
+	}
+	else
+	{
+		if ((rBuffer[0] == '$') )
+		{
+			  if (!sndr)
+			  {
+				sndr = true;
+				if (timeout % 2 == 0)
+				  II_Play_beat1();
+				else
+				  II_Play_beat2();
+			  }
+			
+			 if ((char)rBuffer[1] == _itoa(key_in))
+			  {
+#ifdef  ONLINE_DEBUG
+				Serial.begin(BAUD_RATE);
+				Serial.print("g");
+				Serial.println(key_in);
+				Serial.end();
 #endif
-            total_record += 1;
-            total_take_time += timeout;
-			return true;
-          }
-          else // wrong target TBD
-          {
-			//== TBD  2017-Dec-28
-          }
+				total_record += 1;
+				total_take_time += timeout;
+				return true;
+			 }
+			 else // wrong target TBD
+			 {
+				//== TBD  2017-Dec-28
+			 }
 
-        }
-#ifdef ONLINE_DEBUG
-        Serial.println(Temp);
-#endif
-      }
-	  else
-	delay(1);
-    }
 
+		}
+		
+   }
+	
 
 
   }
@@ -1646,10 +1636,10 @@ int get_who_is_online()//
 //		 rCount++;
 //		}
 	   timeout = 0;
-	  while ((timeout < 2550)&&(rBuffer[1]==0))
+	  while ((timeout < GET_WHO_IS_ONLINE_TRYTIMES)&&(rBuffer[1]==0))
 		{
 		timeout++;
-delay(1);
+		delay(1);
 	  }
 
 	  if(rBuffer[1]!=0)
@@ -1667,11 +1657,11 @@ delay(1);
 				  {
 					result |= 0x01 << (i - 1);
 #ifdef  STEP2STEP_DEBUG
-		Serial.begin(BAUD_RATE);
-				   Serial.print("get :");
-				  Serial.println(i);
-			  Serial.println(result);
-		Serial.end();
+//		Serial.begin(BAUD_RATE);
+//				   Serial.print("get :");
+//				  Serial.println(i);
+//			  Serial.println(result);
+//		Serial.end();
 #endif
 					
 	  //		  w_Send_oneSignal(VT, i);
@@ -1843,7 +1833,7 @@ void get_rf_frequncy()
 #ifdef ONLINE_DEBUG
 		Serial.begin(BAUD_RATE);
 			Serial.print("init_Channel:");
-			Serial.println(Mirf.channel);
+			Serial.println(myChannel);
 		Serial.end();
 		  
 #endif
@@ -1959,9 +1949,9 @@ void RF_24L01_Frequency_Hopping(int channel)//channel must from 1-6 !!
 
 //  Mirf.spi = &MirfHardwareSpi;
 //  Mirf.init();
-//  Mirf.setRADDR((byte *)"LAVAJ"); //设置自己的地址（发送端地址），使用5个字符
+//  Mirf.setRADDR((byte *)"LAVAJ"); 
 //  Mirf.payload = sizeof(data);
-//  Mirf.channel = BASE_FREQUNCY-channel*15;          //设置所用信道
+//  Mirf.channel = BASE_FREQUNCY-channel*15;
 //  Mirf.config();
 //  Mirf.configRegister(RF_SETUP,SPEED_DATA_RATES);
 
@@ -2001,7 +1991,7 @@ void RF_24L01_address_Hopping(int address)//channel must from 1-6 !!
 
 //  }
 //  Mirf.payload = sizeof(data);
-//  Mirf.channel = BASE_FREQUNCY;          //设置所用信道
+//  Mirf.channel = BASE_FREQUNCY;          
 //  Mirf.config();
 //  Mirf.configRegister(RF_SETUP,SPEED_DATA_RATES);
 
@@ -2609,10 +2599,10 @@ bool Bluetooth_test()
 }
 bool Traning_again_zhuque()
 {
-#if 0
-  int key;
+#if 1// v242 revivify
+  
   int random_i;
-  key = 0;
+ 
   timeout = 0;
   III_TrunOFF_All_LED();
 
@@ -2631,31 +2621,35 @@ bool Traning_again_zhuque()
 	III_TrunON_All_LED();
 
 #endif
-	while ((key == 0) && timeout < 1200)
+	SetRF_ModeM(READING_MODE);
+
+	while ((rBuffer[1]==0) && timeout < 1200)
 	{
 	  timeout++;
-
+	  delay(10);
+	}
+	
     //byte data[Mirf.payload];
-    if (!Mirf.isSending() && Mirf.dataReady())
-    {
-
-      Mirf.getData(data);
-
-
+    if(rBuffer[1]!=0)
+    {     
       int i;
       String Temp;
-      for (i = 0; i < Mirf.payload; i++)
+      for (i = 0; i < 2; i++)
       {
-        Temp += char(data[i]);
+        Temp += char(rBuffer[i]);
       }
 #ifdef ONLINE_DEBUG
+	  Serial.begin(BAUD_RATE);
+
       Serial.println(Temp);
 #endif
 
-      if ((data[0] == '$') )
+      if ((rBuffer[0] == '$') )
       {
 #ifdef ONLINE_DEBUG
         Serial.println(">Beat Bird!");
+		Serial.end();
+
 #endif
         II_Play_beat1();
         III_TrunOFF_All_LED();
@@ -2667,19 +2661,19 @@ bool Traning_again_zhuque()
 
     }
 
-  }
+  else
 #endif
   return false;
 }
 
 bool Traning_again()
 {
-#if 0
+#if 1// v242 revivify 
 
-  int key, random_i;
+  int  random_i;
   byte Temp_SS = 0;
  // byte data[Mirf.payload];
-  key = 0;
+
   timeout = 0;
   random_i = 0;
   
@@ -2693,12 +2687,18 @@ bool Traning_again()
 	else
 	{
 #ifdef ONLINE_DEBUG
+		Serial.begin(BAUD_RATE);
+
 		Serial.print("##");
 		Serial.println(SectionSelect);
+		  Serial.end();
 #endif
 	}
 #ifdef STEP2STEP_DEBUG
+	  Serial.begin(BAUD_RATE);
 	  Serial.println("Traning_again?");
+  Serial.end();
+
 #endif
 
   II_Play_S25_again();
@@ -2716,31 +2716,32 @@ bool Traning_again()
 #endif
   
 
-	while ((key == 0) && timeout < TRY_AGAIN_TIMEO)
+	while ((rBuffer[1]==0) && timeout < TRY_AGAIN_TIMEO)
 	{
 	  timeout++;
 	if(timeout%3000==0)
 	  bt_upload_next_withoutack();//v192
-    if (!Mirf.isSending() && Mirf.dataReady())
+	}
+    if (rBuffer[1]!=0)
     {
-
-      Mirf.getData(data);
-
-
       int i;
       String Temp;
-      for (i = 0; i < Mirf.payload; i++)
+      for (i = 0; i < 2; i++)
       {
-        Temp += char(data[i]);
+        Temp += char(rBuffer[i]);
       }
 #ifdef ONLINE_DEBUG
+	  Serial.begin(BAUD_RATE);
       Serial.println(Temp);
+	  Serial.end();
 #endif
 
-      if ((data[0] == '$') )
+      if ((rBuffer[0] == '$') )
       {
 #ifdef ONLINE_DEBUG
+		Serial.begin(BAUD_RATE);
         Serial.println(">Beat Again!");
+		Serial.end();
 #endif
         II_Play_beat1();
         III_TrunOFF_All_LED();
@@ -2751,13 +2752,14 @@ bool Traning_again()
 
 
     }
-
+	Serial.begin(BAUD_RATE);
     while (Serial.available() > 0)
     {
       comdata += char(Serial.read());
       delay(2);
 
     }
+	Serial.end();
     if (comdata.length() > 0)
     {
       if ((comdata[0] == '@') && (comdata[1] == 'M'))
@@ -2794,7 +2796,7 @@ ReselectMode:
 	delay(1);
 
 
-  }
+  
 #endif
   return false;
 }
