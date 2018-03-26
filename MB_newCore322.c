@@ -773,7 +773,7 @@ void  III_Switch_LED(bool sw, int i)
 
 void test_all_target()
 {
-#if 1 v242 revivify
+#if 1 // v242 revivify
   int  i;
 
   for (i = 1; i < 3; i++)
@@ -781,32 +781,30 @@ void test_all_target()
     delay(500);
     timeout = 0;
     w_Send_oneSignal(BT, i);
-    while ((timeout < 205)&&(rBuffer[1]!=0))
+	  SetRF_ModeM(READING_MODE);
+    while ((timeout < 205)&&(rBuffer[1]==0))
     {
       timeout++;
+	  delay(50);
     	}
      // byte data[Mirf.payload];
-      if (!Mirf.isSending() && Mirf.dataReady())
-      { //
-
-        Mirf.getData(data);
-
-
+      if (rBuffer[1]!=0)
+      {
         int ii;
         String Temp;
-        for (ii = 0; ii < Mirf.payload; ii++) //
+        for (ii = 0; ii < 2; ii++) //
         {
-          Temp += char(data[ii]);
+          Temp += char(rBuffer[ii]);
         }
 		Serial.begin(BAUD_RATE);
         Serial.println(i);
 
-        if (data[0] == '$')
+        if (rBuffer[0] == '$')
         {
           //record ++ //TBD
 
           Serial.println("jj");
-          if ((char)data[1] == _itoa(i))
+          if ((char)rBuffer[1] == _itoa(i))
           {
             Serial.println("ggg");
             break;
@@ -815,8 +813,7 @@ void test_all_target()
 	  Serial.end();
 
       }
-      delay(5);
-	  
+       
     
 
   }
@@ -1032,7 +1029,7 @@ void set_volume()// aa 13 01 1e dc max
 {
 #ifdef STEP2STEP_DEBUG
 	Serial.begin(BAUD_RATE);
-		Serial.println("_set_volume");
+	Serial.println("_set_volume");
 	Serial.end();
 #endif
 
@@ -1073,8 +1070,9 @@ bool beat_bird_toSTART()
   //III_TrunOFF_All_LED();
   II_Play_S6_start_QuanPuwords();
   III_TrunON_All_LED();
+  SetRF_ModeM(READING_MODE);
 
-  while (timeout < 64000)
+  while ((timeout < 64000)&&(rBuffer[1]==0))
   {
     timeout++;
 	if(timeout%600==0)
@@ -1099,14 +1097,14 @@ bool beat_bird_toSTART()
       String Temp;
       for (i = 0; i < 2; i++)
       {
-        Temp += char(data[i]);
+        Temp += char(rBuffer[i]);
       }
 #ifdef ONLINE_DEBUG
 	  Serial.begin(BAUD_RATE);
       Serial.println(Temp);
 #endif
 
-      if ((data[0] == '$') )
+      if ((rBuffer[0] == '$') )
       {
 #ifdef ONLINE_DEBUG
         Serial.println(">Beat Bird!");
@@ -2715,6 +2713,7 @@ bool Traning_again()
 
 #endif
   
+	SetRF_ModeM(READING_MODE);
 
 	while ((rBuffer[1]==0) && timeout < TRY_AGAIN_TIMEO)
 	{
