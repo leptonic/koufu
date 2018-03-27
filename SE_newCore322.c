@@ -6,7 +6,8 @@
 //v210 try to with TRM replace new libray to MIRF
 //230 another version new libray to TRM
 //232 implement TRM in global.
-#define VERISON 232
+//250 sync with mother board
+#define VERISON 250
 //#define SLEEP_TEST 1
 //#define CONFIGRATION 1
 //#define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
@@ -117,7 +118,7 @@ typedef enum { role_sender = 1, role_receiver } role_e;                 // The v
 const char* role_friendly_name[] = { "invalid", "Sender", "Receiver"};  // The debug-friendly names of those roles
 role_e role;   
 
-static uint32_t message_count = 0;
+//static uint32_t message_count = 0;
 
 //rf o
 
@@ -167,8 +168,10 @@ void III_Get_myName()
 	if(digitalRead(NAME3_PIN))
 				result|=0x04;
 #ifdef DEBUGMODE
-//Serial.print("pinstate:");
-//Serial.println(result);
+Serial.begin(BAUD_RATE);
+Serial.print("NamePinstate:");
+Serial.println(result);
+Serial.end();
 #endif
 	switch(result)
 	{
@@ -272,8 +275,8 @@ void RF_24L01_Init()
   // Setup and configure rf radio
   radio.begin();  
   //radio.setPALevel(RF24_PA_LOW);
-  radio.enableAckPayload();                         // We will be using the Ack Payload feature, so please enable it
-  radio.enableDynamicPayloads();                    // Ack payloads are dynamic payloads
+//  radio.enableAckPayload();                         // We will be using the Ack Payload feature, so please enable it
+//  radio.enableDynamicPayloads();                    // Ack payloads are dynamic payloads
                                                     // Open pipes to other node for communication
   if ( role == role_sender )
   	{                      // This simple sketch opens a pipe on a single address for these two nodes to 
@@ -283,7 +286,7 @@ void RF_24L01_Init()
     radio.openWritingPipe(address[1]);
     radio.openReadingPipe(1,address[0]);
     radio.startListening();
-    radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
+//    radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
     //++message_count;        
   }
   radio.printDetails();                             // Dump the configuration of the rf unit for debugging
@@ -298,8 +301,8 @@ void RF_reset()
 //	delay(50);
 radio.begin();	
 //radio.setPALevel(RF24_PA_LOW);
-radio.enableAckPayload();						  // We will be using the Ack Payload feature, so please enable it
-radio.enableDynamicPayloads();					  // Ack payloads are dynamic payloads
+//radio.enableAckPayload();						  // We will be using the Ack Payload feature, so please enable it
+//radio.enableDynamicPayloads();					  // Ack payloads are dynamic payloads
 												  // Open pipes to other node for communication
 if ( role == role_sender )
   { 					 // This simple sketch opens a pipe on a single address for these two nodes to 
@@ -312,7 +315,7 @@ else
   radio.openWritingPipe(address[1]);
   radio.openReadingPipe(1,address[0]);
   radio.startListening();
-  radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
+//  radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
   //++message_count;		
 }
 
@@ -393,7 +396,7 @@ void D2onChange()
   if ( rx || radio.available()){                      // Did we receive a message?
     
     if ( role == role_sender ) {                      // If we're the sender, we've received an ack payload
-        radio.read(&message_count,sizeof(message_count));
+//        radio.read(&message_count,sizeof(message_count));
 //        Serial.print(F("Ack: "));
 //        Serial.println(message_count);
     }
@@ -404,8 +407,8 @@ void D2onChange()
       radio.read( &rBuffer, sizeof(rBuffer) );  
 	 
      
-      radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
-      ++message_count;                                // packet counter
+//      radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
+//      ++message_count;                                // packet counter
     }
   }
 } 
@@ -488,7 +491,8 @@ Serial.end();
  // wdt_enable(TIMEOUT);
   // attachInterrupt(0, Receive, FALLING);
   rCount=0;
-  message_count=0;
+//  message_count=0;
+	Serial.end();
 
 }
 
@@ -726,6 +730,13 @@ void _test()
 //delay(1000);
 
 }
+void Clean_InputData()
+{
+	rCount=0;
+	rBuffer[0]=0;
+	rBuffer[1]=0;  
+
+}
 void loop()
 {
   
@@ -746,17 +757,24 @@ _test();
 
 //Serial.begin(BAUD_RATE);
 //	Serial.print(F("Gotl "));
-//		Serial.print(rBuffer[0]);
+//		Serial.println(rBuffer[0]);
 //		Serial.println(rBuffer[1]);
 //Serial.end();
 
     if (rBuffer[0] == '%') //beat
-    {
-
+    { 
       if (rBuffer[1] == KEY_BIT)
       {
         run_training();
       }
+	  Clean_InputData();
+
+    }
+	 else if (rBuffer[0] == '$') //Open led
+    {
+    Clean_InputData();
+    delay(300);
+	return;
 
     }
     else if (rBuffer[0] == '#') //Open led
@@ -766,6 +784,8 @@ _test();
       {
         III_Control_LED(1);
       }
+    Clean_InputData();
+
 
     }
     else if (rBuffer[0] == '!') //Close led
@@ -775,6 +795,8 @@ _test();
       {
         III_Control_LED(0);
       }
+    Clean_InputData();
+
 
     }
 
@@ -784,7 +806,7 @@ _test();
       if (rBuffer[1] == KEY_BIT)
       {
 
-      #if 1
+    
 	  char sd[2];
 	   sd[0] = '$';
 	   sd[1] = KEY_BIT;
@@ -798,12 +820,12 @@ _test();
         }
 	  delay(50);
 	   rf_Send(sd);
-	   
+#ifdef STEP2STEP_DEBUG	   
 Serial.begin(BAUD_RATE);
 	   Serial.print("+");
 	   Serial.println(KEY_BIT);
 Serial.end();
-
+#endif
 	    III_Control_LED(1);
        delay(50);
        III_Control_LED(0);
@@ -817,63 +839,25 @@ Serial.end();
 	  III_Control_LED(0);
 	  
 		
-	  #else
-        char sd[2];
-//        III_Control_LED(1);
-        sd[0] = '$';
-        if (!III_Get_Battery_State())
-        {
-          sd[1] = 'L';
-        }
-        else
-        {
-          sd[1] = KEY_BIT;
-        }
-    //timeout=0;
-     // delay(CONFIGRATION*10);
-    //delay(5);
-      Serial.println("get");
-        //while((!Mirf.dataReady())&&timeout<300)
-       // for(timeout=0;timeout<50;timeout++)
-        {
-        III_Rf_Init();
-          rf_Send(sd);
-//      delay(19);
-//       rf_Send(sd);
-//       delay(39);
-//        rf_Send(sd);
-//       delay(79);
-  
-        }
-       III_Control_LED(1);
-       delay(50);
-       III_Control_LED(0);
-	  delay(150);		  
-	  III_Control_LED(1);
-	  delay(170);
-	  III_Control_LED(0);
-	  delay(100);				
-	  III_Control_LED(1);
-	  delay(50);
-	  III_Control_LED(0);
-	  #endif
+
 
       }
+	   Clean_InputData();
     }// +++
 
-  rCount=0;
-  rBuffer[0]=0;
-  rBuffer[1]=0;  
-
+      Clean_InputData();
     
   }
 
   else //for beat birds
   {
+	Clean_InputData();
     if (get_key())
     {
 #ifdef STEP2STEP_DEBUG
 Serial.begin(BAUD_RATE);
+	  Serial.println("=Dry run=");
+
       Serial.println(KEY_BIT);
 Serial.end();
 #endif
