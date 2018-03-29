@@ -17,7 +17,6 @@
 //230 try to with TRM replace new  MIRF
 //240 another version new libray to TRM
 //242 implement TRM Plan in global
-//250 try version
 #include <SoftwareSerial.h>
 #include <SPI.h>
 //#include <Mirf.h>
@@ -27,10 +26,10 @@
 
 //#include <MirfHardwareSpiDriver.h>
 
-#define VERION    250
-//#define DEBUG 11
-//#define ONLINE_DEBUG 12
-//#define STEP2STEP_DEBUG 13
+#define VERION    242
+#define DEBUG 11
+#define ONLINE_DEBUG 12
+#define STEP2STEP_DEBUG 13
 #define _DBG_STATIC_FREQNCY  15
 #define _DBG_NOCHECK_BATTERY 16
 //#define _DBG_RF11_INFO		  17
@@ -50,7 +49,7 @@
 #define GAME_MODE_ROUND   11
 #define GAME_MODE_ERROR    13
 #define BAUD_RATE 9600
-#define GET_WHO_IS_ONLINE_TRYTIMES  250
+#define GET_WHO_IS_ONLINE_TRYTIMES  550
 
 #define BASE_FREQUNCY   90
 #define SPEED_DATA_RATES 0x0e// 0x06 7 1M 0x0f 2M 
@@ -94,8 +93,8 @@
 #define FORCE_SHARE_INFORMATION_TIMEOUT 60000
 #define TRY_AGAIN_TIMEOUT 5
 #define TRY_AGAIN_TIMEO 36000
-#define RUN_SCRIPT_TIME 20
-#define ONEBIRD_START_TIMEOUT 5
+#define RUN_SCRIPT_TIME 100
+#define ONEBIRD_START_TIMEOUT 1
 #else
 #define PAIRING_TIMEOUT 30000
 #define CONNECT_CHECK_TIMEOUT 500
@@ -179,7 +178,7 @@ typedef enum { role_sender = 1, role_receiver } role_e;                 // The v
 const char* role_friendly_name[] = { "invalid", "Sender", "Receiver"};  // The debug-friendly names of those roles
 role_e role;   
 
-//static uint32_t message_count = 0;
+static uint32_t message_count = 0;
 
 //rf o
 
@@ -209,7 +208,7 @@ void system_reset()
   II_Play_s22_BT_disconnect();
   bt_Throwout_Error_withoutack();//v1.8
   III_BT(0);
-  delay(5000);
+  delay(10000);
   III_BT(1);
   resetFunc();
   III_BT(1);
@@ -423,12 +422,6 @@ Serial.end();
 }
 void II_Play_lowpower()
 {
-#ifdef STEP2STEP_DEBUG
-  Serial.begin(BAUD_RATE);
-	  Serial.println("II_Play_lowpower");
-  Serial.end();
-#endif
-
   II_PlayWave(snd_8, 674 + ANT_POPC);
 }
 void II_Play_S15_BT_SendOver_dididi()//di~di~di~
@@ -440,7 +433,7 @@ void II_Play_btsend()
 {
   //II_PlayWave(, );
 }
-void II_Play_S14_cycleEnd()
+void II_Play_S14_gameover()
 {
   II_PlayWave(snd_21, 3411 + ANT_POPC);
 }
@@ -604,11 +597,6 @@ void III_Play_Who_LowPower(int who)
 
     delay(500);
   }
-  #ifdef STEP2STEP_DEBUG
-  Serial.begin(BAUD_RATE);
-	  Serial.println("II_Play_direct");
-  Serial.end();
-#endif
   II_Play_lowpower();
 }
 char _itoa(int a)
@@ -759,7 +747,7 @@ void III_TrunON_All_LED()
   {
     w_Send_oneSignal(LON, i);
     delay(5);
-//    w_Send_oneSignal(LON, i);
+    w_Send_oneSignal(LON, i);
   }
 }
 void  III_TrunOFF_All_LED()
@@ -769,7 +757,7 @@ void  III_TrunOFF_All_LED()
   {
     w_Send_oneSignal(LOFF, i);
     delay(5);
-//    w_Send_oneSignal(LOFF, i);
+    w_Send_oneSignal(LOFF, i);
   }
 }
 void  III_Switch_LED(bool sw, int i)
@@ -785,7 +773,7 @@ void  III_Switch_LED(bool sw, int i)
 
 void test_all_target()
 {
-#if 1 // v242 revivify
+#if 1 v242 revivify
   int  i;
 
   for (i = 1; i < 3; i++)
@@ -793,30 +781,32 @@ void test_all_target()
     delay(500);
     timeout = 0;
     w_Send_oneSignal(BT, i);
-	  SetRF_ModeM(READING_MODE);
-    while ((timeout < 205)&&(rBuffer[1]==0))
+    while ((timeout < 205)&&(rBuffer[1]!=0))
     {
       timeout++;
-	  delay(50);
     	}
      // byte data[Mirf.payload];
-      if (rBuffer[1]!=0)
-      {
+      if (!Mirf.isSending() && Mirf.dataReady())
+      { //
+
+        Mirf.getData(data);
+
+
         int ii;
         String Temp;
-        for (ii = 0; ii < 2; ii++) //
+        for (ii = 0; ii < Mirf.payload; ii++) //
         {
-          Temp += char(rBuffer[ii]);
+          Temp += char(data[ii]);
         }
 		Serial.begin(BAUD_RATE);
         Serial.println(i);
 
-        if (rBuffer[0] == '$')
+        if (data[0] == '$')
         {
           //record ++ //TBD
 
           Serial.println("jj");
-          if ((char)rBuffer[1] == _itoa(i))
+          if ((char)data[1] == _itoa(i))
           {
             Serial.println("ggg");
             break;
@@ -825,7 +815,8 @@ void test_all_target()
 	  Serial.end();
 
       }
-       
+      delay(5);
+	  
     
 
   }
@@ -987,7 +978,7 @@ void DEBUG_sndtest()
   delay(1000);
   II_Play_S15_BT_SendOver_dididi();
   delay(1000);
-  II_Play_S14_cycleEnd();
+  II_Play_S14_gameover();
   delay(1000);
   II_Play_foot_R();
   delay(1000);
@@ -1041,7 +1032,7 @@ void set_volume()// aa 13 01 1e dc max
 {
 #ifdef STEP2STEP_DEBUG
 	Serial.begin(BAUD_RATE);
-	Serial.println("_set_volume");
+		Serial.println("_set_volume");
 	Serial.end();
 #endif
 
@@ -1061,14 +1052,6 @@ void set_playover()
   SendData(0xba);
 
 }
-void Clean_InputDataM()
-{
-	rCount=0;
-	rBuffer[0]=0;
-	rBuffer[1]=0;  
-
-}
-
 void SendData (byte addr)
 {
   ss.write(addr);
@@ -1090,13 +1073,12 @@ bool beat_bird_toSTART()
   //III_TrunOFF_All_LED();
   II_Play_S6_start_QuanPuwords();
   III_TrunON_All_LED();
-  SetRF_ModeM(READING_MODE);
 
-  while ((timeout < 64000)&&(rBuffer[1]==0))
+  while (timeout < 64000)
   {
     timeout++;
 	if(timeout%600==0)
-	  bt_upload_ready_withoutack();//v192
+	  bt_upload_state_withoutack();//v192
 	delay(5);
   	}
 #if 0 // remove this region 
@@ -1117,14 +1099,14 @@ bool beat_bird_toSTART()
       String Temp;
       for (i = 0; i < 2; i++)
       {
-        Temp += char(rBuffer[i]);
+        Temp += char(data[i]);
       }
 #ifdef ONLINE_DEBUG
 	  Serial.begin(BAUD_RATE);
       Serial.println(Temp);
 #endif
 
-      if ((rBuffer[0] == '$') )
+      if ((data[0] == '$') )
       {
 #ifdef ONLINE_DEBUG
         Serial.println(">Beat Bird!");
@@ -1579,7 +1561,7 @@ void D2onChange()
 	  if ( rx || radio.available()){					  // Did we receive a message?
 		
 		if ( role == role_sender ) {					  // If we're the sender, we've received an ack payload
-//		    radio.read(&message_count,sizeof(message_count));
+		    radio.read(&message_count,sizeof(message_count));
 			
 	//		  Serial.print(F("Ack: "));
 	//		  Serial.println(message_count);
@@ -1591,8 +1573,8 @@ void D2onChange()
 		  radio.read( &rBuffer, sizeof(rBuffer) );	
 		 
 		 rCount++;
-//		  radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
-//		  ++message_count;								  // packet counter
+		  radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
+		  ++message_count;								  // packet counter
 		}
 	  }
 
@@ -1609,20 +1591,20 @@ int get_who_is_online()//
   int q;
   result = 0;
   // first check itself 
-  do_Battery_check();
+//  do_Battery_check();
  // for(q=0;q<3;q++)
   	{
   for (i = 1; i < 7; i++)
   {
-    int rd=	random(3,9);
-	delay(rd*53);
+
+    delay(1000);
 
 //	if((result&(0x01 << (i - 1)))==1)
 //		continue;
-	for (j = 0; j <7; j++)
+	//for (j = 0; j < 3; j++)
     {
-    	int rd=	random(3,7);
-		delay(rd*47);
+
+		delay(100);
 
 //#ifdef  STEP2STEP_DEBUG
 //			Serial.begin(BAUD_RATE);
@@ -1640,8 +1622,12 @@ int get_who_is_online()//
 //#endif
 	
 	
-      delay(30);
-
+//     delay(20);
+#if 0
+		}}
+  return 1;
+{{
+#endif
 		SetRF_ModeM(READING_MODE);
 	
 //      while ((timeout < 550)&&(rCount==0))
@@ -1679,7 +1665,7 @@ int get_who_is_online()//
 #endif
 					
 	  //		  w_Send_oneSignal(VT, i);
-				j=8;//	goto NextTarget;
+				j=4;//	goto NextTarget;
 				  }
 				  else if (rBuffer[1] == 'L')
 				  {
@@ -1695,15 +1681,16 @@ int get_who_is_online()//
 					III_Play_Who_LowPower(i);
 					
 	  //			w_Send_oneSignal(VT, i);
-					j=8;//goto NextTarget;  // v190 Repeat 1 times for low power
+					j=4;//goto NextTarget;  // v190 Repeat 1 times for low power
 				  }
 				}
-		Clean_InputDataM();		
+		  rCount=0;
+  		  rBuffer[0]=0;
+ 		  rBuffer[1]=0;  		
 
 	  }
 	  else
 	  	{
-	  	Clean_InputDataM();		
 	     
 #ifdef  STEP2STEP_DEBUG
 				Serial.begin(BAUD_RATE);
@@ -1812,11 +1799,6 @@ void calc_result()
       II_Play_levelA();
     }
   }//total_record!=0
-  #ifdef STEP2STEP_DEBUG	
-Serial.begin(BAUD_RATE);
-	Serial.println("PLAY_Voice_Result");
-Serial.end();
-#endif
   work_state = STATE_IDEA;
 #endif
 }
@@ -1873,8 +1855,8 @@ void RF_24L01_InitM()
 	// Setup and configure rf radio
 	radio.begin();	
 	//radio.setPALevel(RF24_PA_LOW);
-//	radio.enableAckPayload();						  // We will be using the Ack Payload feature, so please enable it
-//	radio.enableDynamicPayloads();					  // Ack payloads are dynamic payloads
+	radio.enableAckPayload();						  // We will be using the Ack Payload feature, so please enable it
+	radio.enableDynamicPayloads();					  // Ack payloads are dynamic payloads
 													  // Open pipes to other node for communication
 	if ( role == role_sender )
 	  { 					 // This simple sketch opens a pipe on a single address for these two nodes to 
@@ -1885,7 +1867,7 @@ void RF_24L01_InitM()
 	  radio.openWritingPipe(address[1]);
 	  radio.openReadingPipe(1,address[0]);
 	  radio.startListening();
-//	  radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
+	  radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
 	  //++message_count;		
 	}
 #ifdef _DBG_RF11_INFO
@@ -1902,8 +1884,8 @@ void RF_resetM()
 
 radio.begin();	
 //radio.setPALevel(RF24_PA_LOW);
-//radio.enableAckPayload();						  // We will be using the Ack Payload feature, so please enable it
-//radio.enableDynamicPayloads();					  // Ack payloads are dynamic payloads
+radio.enableAckPayload();						  // We will be using the Ack Payload feature, so please enable it
+radio.enableDynamicPayloads();					  // Ack payloads are dynamic payloads
 												  // Open pipes to other node for communication
 if ( role == role_sender )
   { 					 // This simple sketch opens a pipe on a single address for these two nodes to 
@@ -1916,7 +1898,7 @@ else
   radio.openWritingPipe(address[1]);
   radio.openReadingPipe(1,address[0]);
   radio.startListening();
-//  radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
+  radio.writeAckPayload( 1, &message_count, sizeof(message_count) );  // Add an ack packet for the next time around.  This is a simple
   //++message_count;		
 }
 
@@ -2027,32 +2009,22 @@ bool bt_pairing()// ture connected; false disconnect
 {
   timeout = 0;
   comdata = "";
-  
-   III_TrunON_All_LED();
-  delay(50);
-   III_TrunOFF_All_LED();
-  delay(50);
-  III_TrunON_All_LED();
-  delay(100);
-  III_TrunOFF_All_LED();
-  delay(100);
-  III_TrunON_All_LED();
-  delay(300);
-   III_TrunOFF_All_LED();   
-  delay(300);
-  	
-Serial.begin(BAUD_RATE);
   while (timeout < PAIRING_TIMEOUT)
   {
     delay(2);
     timeout++;
+    if (!(timeout % 2 == 0))
+      III_TrunON_All_LED();
+    else
+      III_TrunOFF_All_LED();
+Serial.begin(BAUD_RATE);
     while (Serial.available() > 0)
     {
       comdata += char(Serial.read());
       delay(2);
 
     }
-
+Serial.end();
     if (comdata.length() > 0)
     {
       if ((comdata[0] == '@') && (comdata[1] == 'P'))
@@ -2064,10 +2036,9 @@ Serial.begin(BAUD_RATE);
 		comdata="";
         backdata.concat(ID);
         backdata.concat("#");
-
+Serial.begin(BAUD_RATE);
         Serial.println(backdata);
-		Serial.end();
-
+Serial.end();
         return true;
       }
 	  else if((comdata[0] == '@') && (comdata[1] == 'V'))
@@ -2076,9 +2047,9 @@ Serial.begin(BAUD_RATE);
 		  backdata.concat("#");
 		  backdata.concat(VERION);				
 		  backdata.concat("#");
-
+	Serial.begin(BAUD_RATE);
 		  Serial.println(backdata);
-
+	Serial.end();
 		  comdata="";
 	      continue;
 	  }
@@ -2094,9 +2065,7 @@ Serial.begin(BAUD_RATE);
         comdata = "";
       }
     }
-	
   }
-  Serial.end();
   return false;
 }
 
@@ -2108,7 +2077,6 @@ SELECTBIGIN:
   bool first_talk = 0;
   timeout = 0;
   comdata = "";
-  Serial.begin(BAUD_RATE);
   while (timeout < PAIRING_TIMEOUT)
   {
     delay(2);
@@ -2118,18 +2086,18 @@ SELECTBIGIN:
     backdata = "";
       backdata.concat("#");	  
       backdata.concat(SectionSelect);
-
+Serial.begin(BAUD_RATE);
       Serial.println(backdata);
-
+Serial.end();
     }
-
+Serial.begin(BAUD_RATE);
     while (Serial.available() > 0)
     {
       comdata += char(Serial.read());
       delay(2);
 
     }
-
+Serial.end();
     if (comdata.length() > 0)
     {
       if ((comdata[0] == 'A') && (comdata[1] == 'C'))
@@ -2141,7 +2109,6 @@ SELECTBIGIN:
 	  else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
 	  {
 		  comdata="";
-		  Serial.end();
 		  system_reset();
 	      return false;
 
@@ -2167,9 +2134,9 @@ SELECTBIGIN:
   }
   //get the command for APP
 #ifdef STEP2STEP_DEBUG
-
+Serial.begin(BAUD_RATE);
   Serial.println("@S##");
-
+Serial.end();
 #endif
   if (first_talk)
   {
@@ -2179,14 +2146,14 @@ SELECTBIGIN:
     {
       delay(2);
       timeout++;
-
+Serial.begin(BAUD_RATE);
       while (Serial.available() > 0)
       {
         comdata += char(Serial.read());
         delay(2);
 
       }
-
+Serial.end();
       if (comdata.length() > 0)
       {
         if ((comdata[0] == '@') && (comdata[1] == 'S'))
@@ -2196,9 +2163,9 @@ SELECTBIGIN:
           SectionSelect = (byte)ss1;//ss-48;
           backdata = "";
           backdata.concat("ACK#OK#");
-
+Serial.begin(BAUD_RATE);
           Serial.println(backdata);
-
+Serial.end();
           return true;
         }
 	   else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
@@ -2228,7 +2195,6 @@ SELECTBIGIN:
       }
     }
   }
-  Serial.end();
   return false;
 
 
@@ -2239,7 +2205,6 @@ bool bt_upload_data()// 0 means no respond.
   char backrecord[5];
   timeout = 0;
   comdata = "";
-  Serial.begin(BAUD_RATE);
   while (timeout < UP_RESULT_CONNECT_CHECK_TIMEOUT)
   {
     delay(2);
@@ -2252,25 +2217,24 @@ bool bt_upload_data()// 0 means no respond.
       itoa(total_record, backrecord, 10);
       backdata.concat(backrecord);
       backdata.concat("#");
-
+Serial.begin(BAUD_RATE);
       Serial.println(backdata);
-
+Serial.end();
     }
 
-
+Serial.begin(BAUD_RATE);
     while (Serial.available() > 0)
     {
       comdata += char(Serial.read());
       delay(2);
 
     }
-
+Serial.end();
     if (comdata.length() > 0)
     {
       if ((comdata[0] == 'A') && (comdata[1] == 'C'))
       {
 		comdata = "";
-	
         return true;
       }
 	  else if((comdata[0] == '@') && (comdata[1] == 'S')) // tbd it will be confused with select mode?
@@ -2281,7 +2245,6 @@ bool bt_upload_data()// 0 means no respond.
 	  else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
 	  {
 		comdata="";
-		Serial.end();
 		system_reset();
 		return false;
 	
@@ -2289,7 +2252,6 @@ bool bt_upload_data()// 0 means no respond.
 
     }
   }
-
   return false;
 
 
@@ -2305,14 +2267,14 @@ bool Force_share_information_action()// 1 have shared 0 exit //v197 add
 		
 		   timeout++;
 		  
-	
+	Serial.begin(BAUD_RATE);
 		   while (Serial.available() > 0)
 		   {
 			 comdata += char(Serial.read());
 			 delay(2);
 		
 		   }
-
+	Serial.end();
 		   if (comdata.length() > 0)
 		   {
 			 if ((comdata[0] == '@') && (comdata[1] == 'N'))//@NEXT
@@ -2329,7 +2291,7 @@ bool Force_share_information_action()// 1 have shared 0 exit //v197 add
 		
 		   }
 
-	delay(2);
+
 
 	}
 
@@ -2348,18 +2310,6 @@ Serial.end();
 
 
 }
-void bt_upload_ready_withoutack()// 0 means no respond.
-{
-  String backdata;
-  backdata = "";
-  backdata.concat("#READY#");
-Serial.begin(BAUD_RATE);
-  Serial.println(backdata);
-Serial.end();
-
-
-}
-
 void bt_upload_begin_withoutack()// 0 means no respond.
 {
   String backdata;
@@ -2403,7 +2353,6 @@ void bt_Throwout_Error_withoutack()// 0 means no respond.//v1.8
   char backrecord[5];
   timeout = 0;
   comdata = "";
-  Serial.begin(BAUD_RATE);
 
   while (timeout < CONNECT_CHECK_TIMEOUT)
   {
@@ -2414,13 +2363,12 @@ void bt_Throwout_Error_withoutack()// 0 means no respond.//v1.8
 
       backdata = "";
       backdata.concat("#RESET#");
-
+Serial.begin(BAUD_RATE);
       Serial.println(backdata);
-
+Serial.end();
     }
 
   }
-	Serial.end();
 
 
 
@@ -2549,7 +2497,7 @@ void begin_traning()
 
 
   work_state = STATE_IDEA;
-  II_Play_S14_cycleEnd();
+  II_Play_S14_gameover();
   if (bt_upload_data())
   {
     II_Play_S15_BT_SendOver_dididi();
@@ -2706,8 +2654,6 @@ bool Traning_again_zhuque()
         II_Play_beat1();
         III_TrunOFF_All_LED();
 
-		bt_upload_next_withoutack();//v242
-
         return true;
 
       }
@@ -2729,7 +2675,6 @@ bool Traning_again()
  // byte data[Mirf.payload];
 
   timeout = 0;
-   comdata = "";
   random_i = 0;
   
   Temp_SS = get_who_is_online();//v1.8
@@ -2770,57 +2715,12 @@ bool Traning_again()
 
 #endif
   
-	SetRF_ModeM(READING_MODE);
 
 	while ((rBuffer[1]==0) && timeout < TRY_AGAIN_TIMEO)
 	{
 	  timeout++;
-//	if(timeout%3000==0)
-//	  bt_upload_next_withoutack();//v192
-	  while (Serial.available() > 0)
-		 {
-		   comdata += char(Serial.read());
-		   delay(2);
-	  
-		 }
-		 if (comdata.length() > 0)
-		  {
-			if ((comdata[0] == '@') && (comdata[1] == 'M'))
-			{
-	  ReselectMode:
-			  comdata="";
-//			  SectionSelect = get_who_is_online();//v1.8
-			  SectionSelect=Temp_SS;
-
-			  II_Play_S24_Select_mode();
-			  III_TrunOFF_All_LED();
-			  while (!bt_Select_Mode())
-			  {
-				//SectionSelect=btdata;
-				II_Play_S24_Select_mode();
-	  
-	  
-			  }
-			  work_state = STATE_PRE_TRAINNING_S5; // break the while
-			 check_targetOnline_withVoice();// gSection_Select_outspaker();
-			  return Traning_again_zhuque();
-			}
-				else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
-			{
-				comdata="";
-				system_reset();
-				return false;
-	  
-			}
-			else
-			{
-			  comdata = "";
-			}
-	  
-		  }
-
-
-	  delay(2);
+	if(timeout%3000==0)
+	  bt_upload_next_withoutack();//v192
 	}
     if (rBuffer[1]!=0)
     {
@@ -2845,8 +2745,6 @@ bool Traning_again()
 #endif
         II_Play_beat1();
         III_TrunOFF_All_LED();
-		
-		bt_upload_next_withoutack();//v242
 
         return true;
 
@@ -2854,8 +2752,47 @@ bool Traning_again()
 
 
     }
+	Serial.begin(BAUD_RATE);
+    while (Serial.available() > 0)
+    {
+      comdata += char(Serial.read());
+      delay(2);
 
- 
+    }
+	Serial.end();
+    if (comdata.length() > 0)
+    {
+      if ((comdata[0] == '@') && (comdata[1] == 'M'))
+      {
+ReselectMode:
+	  	comdata="";
+        SectionSelect = get_who_is_online();//v1.8
+        II_Play_S24_Select_mode();
+        III_TrunOFF_All_LED();
+        while (!bt_Select_Mode())
+        {
+          //SectionSelect=btdata;
+          II_Play_S24_Select_mode();
+
+
+        }
+        work_state = STATE_PRE_TRAINNING_S5; // break the while
+       check_targetOnline_withVoice();// gSection_Select_outspaker();
+        return Traning_again_zhuque();
+      }
+	  	  else if((comdata[0] == '@') && (comdata[1] == 'R'))//v198
+	  {
+		  comdata="";
+		  system_reset();
+	      return false;
+
+	  }
+      else
+      {
+        comdata = "";
+      }
+
+    }
 	delay(1);
 
 
@@ -2918,9 +2855,7 @@ void setup() {
   silince_tot = 0;
   bt_upload_begin_withoutack();
 #ifdef STEP2STEP_DEBUG
-Serial.begin(BAUD_RATE);
 	  Serial.println("input @P#123456#");
-Serial.end();
 #endif
 
   while (!bt_pairing() && work_state == STATE_UNPARING_S1)
@@ -2983,14 +2918,16 @@ void _test()
 //Serial.end();
 // // get_who_is_online();
 
-//  String backdata = "";	
-
-//	   SectionSelect = get_who_is_online();
-//	 backdata.concat("#");
-//		  backdata.concat(SectionSelect);
-//	Serial.begin(BAUD_RATE);
-//		  Serial.println(backdata);
-//	Serial.end();
+  String backdata = "";	
+Serial.begin(BAUD_RATE);
+   Serial.println("start check who is online");
+Serial.end();
+	   SectionSelect = get_who_is_online();
+	 backdata.concat("#");
+		  backdata.concat(SectionSelect);
+	Serial.begin(BAUD_RATE);
+		  Serial.println(backdata);
+	Serial.end();
 
 //test_all_target();
 
@@ -3055,7 +2992,7 @@ void _test()
 
 //========test channel select
 //	III_Get_Channel();
-	DEBUG_sndtest();
+//	DEBUG_sndtest();
 
 //int _ii;
 //		 Serial.println("==Next test item ADC state==");
@@ -3136,11 +3073,6 @@ Serial.end();
     }
     if (bbts_timeout >= ONEBIRD_START_TIMEOUT)
     {
-    #ifdef STEP2STEP_DEBUG
-Serial.begin(BAUD_RATE);
-	Serial.println("time out ONEBIRD_START_TIMEOUT");
-Serial.end();
-#endif
       system_reset();
     }
     else
