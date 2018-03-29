@@ -24,6 +24,8 @@ namespace SPA
         int TXL, RXL;
         string[] Wkey = { "q", "w", "e", "a", "s", "d", "u", "i", "o", "j", "k", "l", " " };
         string buttonName;
+        string animal;
+        string titlestr;
         string[] ButtonList = { "buttonQ", "buttonW", "buttonE", "buttonA", "buttonS", "buttonD", "buttonU", "buttonI", "buttonO", "buttonJ", "buttonK", "buttonL", "buttonSpace" };
         byte bTarget;
         //Stream htmlbox;
@@ -114,7 +116,9 @@ namespace SPA
                     toolStripStatusLabel_R.Text = null;
                     toolStripStatusLabel_T.Text = null;
                     //RXbox.MustHideCaret = false;
-
+                    animal = "";
+                    this.Text = titlestr + animal;
+                    timer2.Stop();
                 }
                 else
                 {
@@ -133,6 +137,10 @@ namespace SPA
                             toolStripStatusLabel_T.Text = TXL.ToString();
                             Open_or_Close.Text = "关闭串口";
                             Open_or_Close.BackColor = Color.LightGreen;
+                            animal = "-";
+                            titlestr = this.Text;
+                            this.Text = titlestr + animal;
+                            timer2.Start();
                             //RXbox.MustHideCaret = true;
                         }
                         catch
@@ -223,6 +231,30 @@ namespace SPA
         //{
         //    if (RX_backgroundWorker.IsBusy != true) {  }
         //}
+        private void save_Record()
+        {
+            if (RXbox.Lines.Length > 2096)
+            {
+                if (this.RXbox.Text == "")
+                    return;
+
+                {
+                    // Save the contents of the RichTextBox into the file.
+
+                    DateTime ct = DateTime.Now;
+                    string timeinfo = ct.Month.ToString() + ct.Day.ToString() + "_" + ct.Hour.ToString() + ct.Minute.ToString() + ct.Second.ToString();
+                    timeinfo = Directory.GetCurrentDirectory() + "\\" + timeinfo + ".txt";
+                    StreamWriter sw = new StreamWriter(timeinfo, true);
+                    //向创建的文件中写入内容
+                    sw.Write(RXbox.Text);
+                    //关闭当前文件写入流
+                    sw.Close();
+                    RXbox.Clear();
+                    //MessageBox.Show("文件已成功保存");
+                }
+            }
+
+        }
 
         private void RX_thread()
         {
@@ -241,11 +273,28 @@ namespace SPA
             {
                 try
                 {
-                    RXbox.AppendText(HEX_To_ASCII(buffer));
+                    string bufferstr = HEX_To_ASCII(buffer);
+                    bufferstr.Replace("\n", "");
+                    bufferstr.Replace("\r", "");
+                    if (checkBox_timer.Checked)
+                    {
+                        DateTime ct = DateTime.Now;
+                        string timeinfo = ct.Hour.ToString() + "：" + ct.Minute.ToString() + "\'" + ct.Second.ToString();
+
+
+                        RXbox.AppendText("\r\n[" + timeinfo + "]<<<==" + bufferstr);
+                        save_Record();
+                    }
+                    else
+                    {
+
+                        RXbox.AppendText("\r\n" + bufferstr);
+                        save_Record();
+                    }
                     //蛋疼的处理richtextbox
                     //richtextbox中\n \r两者都是换行
                     //if ((buffer[0] == 0x0A) && (flagRN)) { } else { flagRN = false; }
-                    
+
                     //if (buffer[buffer.Length - 1] == 0x0D) { flagRN = true; }
                 }
                 catch { }
@@ -272,7 +321,7 @@ namespace SPA
                         HEX_Mode();
                         if (checkBox2.Checked == true)
                         {
-                            youSend();
+                            youSend( tx_info);
                         }
                     }
                     else
@@ -280,10 +329,10 @@ namespace SPA
                         _SerialPort.Write(tx_info);
                         if (checkBox2.Checked == true)
                         {
-                            youSend();
+                            youSend( tx_info);
                             //textBox1.AppendText("\r\n" + DateTime.Now.ToLongTimeString() + " OpenJumper SPA transmit:" + "\r\n" + textBox2.Text + "\r\n");
                         }
-                        TXL = TXL + textBox2.Text.Length;
+                        TXL = TXL + tx_info.Length;
                         toolStripStatusLabel_T.Text = TXL.ToString();
                     }
                 else toolStripStatusLabel_ERROR.Text = "错误:串口未打开，请先打开串口";
@@ -301,11 +350,17 @@ namespace SPA
             }
         }
 
-        private void youSend()
+        private void youSend(string tx_info)
         {
+            
+            int startPos = RXbox.Text.Length;
+            
             //RXbox.SelectionColor = Color.Red;
-            RXbox.AppendText("\r\n" + DateTime.Now.ToLongTimeString() + " You Send : " + textBox2.Text + "\r\n");
+            RXbox.AppendText("\r\n[" + DateTime.Now.ToLongTimeString() + "]==>>>" + tx_info + "\r\n");
             //RXbox.SelectionColor = Color.Black;
+            int endPos = RXbox.Text.Length;
+            RXbox.Select(startPos, endPos);
+            RXbox.SelectionColor = Color.Red;
         }
         //发送按钮
         private void button1_Click_1(object sender, EventArgs e)
@@ -453,7 +508,7 @@ namespace SPA
 
         private void label17_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("作者：奈何col  From OpenJumper\r\nbug报告及建议提交E-mail： zhou@openjumper.com", caption);
+            MessageBox.Show("mTBD", caption);
         }
 
         private void checkBox1_CheckedChanged(object sender, EventArgs e)
@@ -978,6 +1033,59 @@ namespace SPA
             {
                 throw;
             }
+        }
+
+        private void button32_Click(object sender, EventArgs e)
+        {
+            {
+                // Save the contents of the RichTextBox into the file.
+
+                DateTime ct = DateTime.Now;
+                string timeinfo = ct.Month.ToString() + ct.Day.ToString() + "_" + ct.Hour.ToString() + ct.Minute.ToString() + ct.Second.ToString();
+                timeinfo = Directory.GetCurrentDirectory() + "\\" + "Log" + timeinfo + ".txt";
+                StreamWriter sw = new StreamWriter(timeinfo, false);
+                //向创建的文件中写入内容
+                sw.WriteLine(RXbox.Text);
+                //关闭当前文件写入流
+                sw.Close();
+              //  RXbox.Clear();
+                MessageBox.Show("已保存!");
+            }
+        }
+
+        private void RXbox_TextChanged(object sender, EventArgs e)
+        {
+            if (RXbox.Lines.Length > 100)
+            {
+                if (checkBox_save.Checked)
+                {
+
+                    save_Record();
+                    RXbox.Clear();
+                }
+
+            }
+        }
+
+        private void timer2_Tick(object sender, EventArgs e)
+        {
+            if (animal == "-")
+            {
+                animal = "\\";
+            }
+            else if (animal == "\\")
+            {
+                animal = "|";
+            }
+            else if (animal == "|")
+            {
+                animal = "/";
+            }
+            else if (animal == "/")
+            {
+                animal = "-";
+            }
+            this.Text = titlestr + animal + animal + animal + animal + animal + animal;
         }
 
         private void label19_Click(object sender, EventArgs e)
