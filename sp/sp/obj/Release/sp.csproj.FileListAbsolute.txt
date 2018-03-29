@@ -1,0 +1,8 @@
+D:\github\koufu\sp\sp\bin\Release\sp.exe.config
+D:\github\koufu\sp\sp\bin\Release\sp.exe
+D:\github\koufu\sp\sp\bin\Release\sp.pdb
+D:\github\koufu\sp\sp\obj\Release\SPA.OJ_Serial.resources
+D:\github\koufu\sp\sp\obj\Release\sp.Properties.Resources.resources
+D:\github\koufu\sp\sp\obj\Release\sp.csproj.GenerateResource.Cache
+D:\github\koufu\sp\sp\obj\Release\sp.exe
+D:\github\koufu\sp\sp\obj\Release\sp.pdb

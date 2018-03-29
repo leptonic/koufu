@@ -7,7 +7,7 @@
 //230 another version new libray to TRM
 //232 implement TRM in global.
 //250 sync with mother board
-#define VERISON 250
+#define VERISON 260
 //#define SLEEP_TEST 1
 //#define CONFIGRATION 1
 //#define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
@@ -765,10 +765,12 @@ _test();
     { 
       if (rBuffer[1] == KEY_BIT)
       {
-        run_training();
-      }
+        run_training();		
 	  Clean_InputData();
-
+      }
+	  else
+	  	goto SCANKEY;
+	  
     }
 	 else if (rBuffer[0] == '$') //Open led
     {
@@ -851,6 +853,7 @@ Serial.end();
 
   else //for beat birds
   {
+SCANKEY:
 	Clean_InputData();
     if (get_key())
     {

@@ -18,6 +18,7 @@
 //240 another version new libray to TRM
 //242 implement TRM Plan in global
 //250 try version
+//260 modify the  sound play again
 #include <SoftwareSerial.h>
 #include <SPI.h>
 //#include <Mirf.h>
@@ -27,7 +28,7 @@
 
 //#include <MirfHardwareSpiDriver.h>
 
-#define VERION    250
+#define VERION    260
 //#define DEBUG 11
 //#define ONLINE_DEBUG 12
 //#define STEP2STEP_DEBUG 13
@@ -338,11 +339,11 @@ void II_Play_end()
 }
 void II_Play_beat1()
 {
-  II_PlayWave(snd_1, 280);
+  II_PlayWave(snd_1, 300);
 }
 void II_Play_beat2()
 {
-  II_PlayWave(snd_2, 200);
+  II_PlayWave(snd_2, 300);
 }
 void II_Play_S3_singlemode()
 {
@@ -755,7 +756,7 @@ void w_Send_oneSignal(int type, int num)
 void III_TrunON_All_LED()
 {
   int i;
-  for (i = 1; i < 7; i++)
+  for (i = 1; i < 2; i++)
   {
     w_Send_oneSignal(LON, i);
     delay(5);
@@ -765,7 +766,7 @@ void III_TrunON_All_LED()
 void  III_TrunOFF_All_LED()
 {
   int i;
-  for (i = 1; i < 7; i++)
+  for (i = 1; i < 2; i++)
   {
     w_Send_oneSignal(LOFF, i);
     delay(5);
@@ -841,9 +842,9 @@ void LED_blink()
   for (i = 0; i < 3; i++)
   {
     III_TrunON_All_LED();
-    delay(200);
+    delay(300);
     III_TrunOFF_All_LED();
-    delay(200);
+    delay(300);
   }
 
 
@@ -1088,8 +1089,15 @@ bool beat_bird_toSTART()
   int random_i; 
   timeout = 0;
   //III_TrunOFF_All_LED();
-  II_Play_S6_start_QuanPuwords();
+//  II_Play_S6_start_QuanPuwords(); v260
+  LED_blink();
+	delay(500);
+	LED_blink();
+  delay(500);
+
   III_TrunON_All_LED();
+
+  
   SetRF_ModeM(READING_MODE);
 
   while ((timeout < 64000)&&(rBuffer[1]==0))
@@ -1132,7 +1140,7 @@ bool beat_bird_toSTART()
 #endif
         II_Play_beat1();
         III_TrunOFF_All_LED();
-
+		Clean_InputDataM();
         return true;
 
       }
@@ -1298,11 +1306,12 @@ bool  oneBeat(int key_in)
   bool sndr;
 
   sndr = false;
-  play_ss_ForTarget(key_in);
+  Clean_InputDataM();
  // III_Rf_Init();
 
   if (key_in < 7)
   {
+	play_ss_ForTarget(key_in);
 
     //  delay(1000);
           timeout = 0;
@@ -1323,36 +1332,44 @@ bool  oneBeat(int key_in)
 	}
 	else
 	{
-		if ((rBuffer[0] == '$') )
-		{
-			  if (!sndr)
-			  {
-				sndr = true;
-				if (timeout % 2 == 0)
-				  II_Play_beat1();
-				else
-				  II_Play_beat2();
-			  }
-			
-			 if ((char)rBuffer[1] == _itoa(key_in))
-			  {
+			if ((rBuffer[0] == '$') )
+			{
+				  if (!sndr)
+				  {
+					sndr = true;
+					if (timeout % 2 == 0)
+					  II_Play_beat1();
+					else
+					  II_Play_beat2();
+				  }
+				
+				 if ((char)rBuffer[1] == _itoa(key_in))
+				  {
+#ifdef  ONLINE_DEBUG
+					Serial.begin(BAUD_RATE);
+					Serial.print("g");
+					Serial.println(key_in);
+					Serial.end();
+#endif
+			        total_record += 1;
+			        total_take_time += timeout;
+					
+					Clean_InputDataM();   
+			        return true;
+	       		}
+		       else // wrong target TBD
+		       {
+		        //== TBD  2017-Dec-28
 #ifdef  ONLINE_DEBUG
 				Serial.begin(BAUD_RATE);
-				Serial.print("g");
-				Serial.println(key_in);
+				Serial.print("f:");
+				Serial.println(rBuffer[1]);
 				Serial.end();
-#endif
-				total_record += 1;
-				total_take_time += timeout;
-				return true;
-			 }
-			 else // wrong target TBD
-			 {
-				//== TBD  2017-Dec-28
-			 }
+#endif				
+		       }
 
 
-		}
+		    }
 		
    }
 	
@@ -1361,6 +1378,7 @@ bool  oneBeat(int key_in)
   }
 
 
+  Clean_InputDataM();	
 
   total_take_time += timeout;
   #endif
@@ -2542,8 +2560,9 @@ void bt_uploadstate_forLoop()
 }
 void begin_traning()
 {
-  II_Play_S7_startword();
+//  II_Play_S7_startword();//v260
   //work_state=STATE_TRAINNING;// v15
+  Clean_InputDataM();
 
   run_Script(RUN_SCRIPT_TIME);
 
@@ -2657,6 +2676,7 @@ bool Traning_again_zhuque()
  
   timeout = 0;
   III_TrunOFF_All_LED();
+  Clean_InputDataM();	
 
   // II_Play_S6_start_QuanPuwords();
 
@@ -2727,6 +2747,7 @@ bool Traning_again()
   int  random_i;
   byte Temp_SS = 0;
  // byte data[Mirf.payload];
+  Clean_InputDataM();	
 
   timeout = 0;
    comdata = "";
@@ -2766,6 +2787,11 @@ bool Traning_again()
     else
       III_TrunOFF_All_LED();
 #else
+	LED_blink();
+	  delay(500);
+	  LED_blink();
+	delay(500);
+
 	III_TrunON_All_LED();
 
 #endif
@@ -3129,6 +3155,8 @@ Serial.end();
   if ((work_state == STATE_PRE_TRAINNING_S5) && (GameMode != GAME_MODE_ERROR))
   {
     bbts_timeout = 0;
+	II_Play_S5_welcome();//v260
+	II_Play_S7_startword();//v260
     while ((!beat_bird_toSTART()) && (bbts_timeout < ONEBIRD_START_TIMEOUT))
     {
       bbts_timeout++;
@@ -3146,8 +3174,8 @@ Serial.end();
     else
     {
 
-      II_Play_S5_welcome();
-      delay(800);
+//      II_Play_S5_welcome();
+//      delay(800);  // V260
 
       bt_uploadstate_forLoop();
 
@@ -3160,10 +3188,11 @@ Serial.end();
         if (Traning_again())
         {
 
-          II_Play_S6_start_QuanPuwords();
-          delay(1000);
+//          II_Play_S6_start_QuanPuwords();// v260
+         // delay(1000);
 
           II_Play_S5_welcome();
+		  II_Play_S7_startword();//v260
           delay(800);
           bt_uploadstate_forLoop();
           begin_traning();
