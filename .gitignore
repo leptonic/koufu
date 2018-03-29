@@ -50,3 +50,8 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+MB_newCore322.c
+MB_newCore322.c
+SE_newCore322.c
+*.c
+sp/sp/obj/Debug/sp.csproj.GenerateResource.Cache

@@ -48,9 +48,9 @@ D:\github\koufu\sp\sp\obj\Debug\sp.csproj.GenerateResource.Cache
 C:\Users\v-yiblia\Desktop\sp\sp\sp\bin\Debug\sp.exe.config
 C:\Users\v-yiblia\Desktop\sp\sp\sp\bin\Debug\sp.exe
 C:\Users\v-yiblia\Desktop\sp\sp\sp\bin\Debug\sp.pdb
+C:\Users\v-yiblia\Desktop\sp\sp\sp\obj\Debug\sp.csprojResolveAssemblyReference.cache
 C:\Users\v-yiblia\Desktop\sp\sp\sp\obj\Debug\SPA.OJ_Serial.resources
 C:\Users\v-yiblia\Desktop\sp\sp\sp\obj\Debug\sp.Properties.Resources.resources
 C:\Users\v-yiblia\Desktop\sp\sp\sp\obj\Debug\sp.csproj.GenerateResource.Cache
 C:\Users\v-yiblia\Desktop\sp\sp\sp\obj\Debug\sp.exe
 C:\Users\v-yiblia\Desktop\sp\sp\sp\obj\Debug\sp.pdb
-C:\Users\v-yiblia\Desktop\sp\sp\sp\obj\Debug\sp.csprojResolveAssemblyReference.cache
