@@ -121,7 +121,10 @@
             this.checkBox6 = new System.Windows.Forms.CheckBox();
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.RXbox = new System.Windows.Forms.TextBox();
+            this.RXbox = new System.Windows.Forms.RichTextBox();
+            this.button32 = new System.Windows.Forms.Button();
+            this.checkBox_timer = new System.Windows.Forms.CheckBox();
+            this.checkBox_save = new System.Windows.Forms.CheckBox();
             this.clear_button = new System.Windows.Forms.Button();
             this.checkBox2 = new System.Windows.Forms.CheckBox();
             this.linefeed_checkBox = new System.Windows.Forms.CheckBox();
@@ -194,6 +197,8 @@
             this.textBox20 = new System.Windows.Forms.TextBox();
             this.label36 = new System.Windows.Forms.Label();
             this.button20 = new System.Windows.Forms.Button();
+            this.timer2 = new System.Windows.Forms.Timer(this.components);
+            this.checkBox_autoscroll = new System.Windows.Forms.CheckBox();
             this.SerialGroupBox.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.tabPage4.SuspendLayout();
@@ -412,8 +417,8 @@
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(50, 17);
-            this.toolStripStatusLabel1.Text = "OpenJJ  ";
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(117, 17);
+            this.toolStripStatusLabel1.Text = "Rebuild by Yibo.2018";
             // 
             // toolStripStatusLabel_COM
             // 
@@ -831,7 +836,7 @@
             this.button26.Name = "button26";
             this.button26.Size = new System.Drawing.Size(83, 51);
             this.button26.TabIndex = 3;
-            this.button26.Text = "RT 0x04";
+            this.button26.Text = "RightFoot 0x04   <3>";
             this.button26.UseVisualStyleBackColor = false;
             this.button26.Click += new System.EventHandler(this.button26_Click);
             // 
@@ -842,7 +847,7 @@
             this.button25.Name = "button25";
             this.button25.Size = new System.Drawing.Size(83, 51);
             this.button25.TabIndex = 3;
-            this.button25.Text = "LT 0x02";
+            this.button25.Text = "Left Foot 0x02  <2>";
             this.button25.UseVisualStyleBackColor = false;
             this.button25.Click += new System.EventHandler(this.button25_Click);
             // 
@@ -853,7 +858,7 @@
             this.button24.Name = "button24";
             this.button24.Size = new System.Drawing.Size(83, 51);
             this.button24.TabIndex = 3;
-            this.button24.Text = "Tiger 0x10";
+            this.button24.Text = "Tiger 0x10  <5>";
             this.button24.UseVisualStyleBackColor = false;
             this.button24.Click += new System.EventHandler(this.button24_Click);
             // 
@@ -864,7 +869,7 @@
             this.button23.Name = "button23";
             this.button23.Size = new System.Drawing.Size(83, 51);
             this.button23.TabIndex = 3;
-            this.button23.Text = "Dragon 0x08";
+            this.button23.Text = "Dragon 0x08   <4>";
             this.button23.UseVisualStyleBackColor = false;
             this.button23.Click += new System.EventHandler(this.button23_Click);
             // 
@@ -875,7 +880,7 @@
             this.button22.Name = "button22";
             this.button22.Size = new System.Drawing.Size(83, 51);
             this.button22.TabIndex = 3;
-            this.button22.Text = "Tortoise 0x20";
+            this.button22.Text = "Tortoise 0x20 <6>";
             this.button22.UseVisualStyleBackColor = false;
             this.button22.Click += new System.EventHandler(this.button22_Click);
             // 
@@ -886,7 +891,7 @@
             this.button21.Name = "button21";
             this.button21.Size = new System.Drawing.Size(83, 43);
             this.button21.TabIndex = 2;
-            this.button21.Text = "Phoenix 0x01";
+            this.button21.Text = "Phoenix 0x01 <1>";
             this.button21.UseVisualStyleBackColor = false;
             this.button21.Click += new System.EventHandler(this.button21_Click);
             // 
@@ -1141,9 +1146,10 @@
             this.groupBox2.Controls.Add(this.textBox4);
             this.groupBox2.Controls.Add(this.checkBox6);
             this.groupBox2.Controls.Add(this.textBox2);
-            this.groupBox2.Location = new System.Drawing.Point(3, 499);
+            this.groupBox2.ImeMode = System.Windows.Forms.ImeMode.NoControl;
+            this.groupBox2.Location = new System.Drawing.Point(3, 586);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(739, 133);
+            this.groupBox2.Size = new System.Drawing.Size(766, 46);
             this.groupBox2.TabIndex = 10;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "发送区";
@@ -1152,7 +1158,7 @@
             // 
             this.label14.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(716, 92);
+            this.label14.Location = new System.Drawing.Point(186, 29);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(20, 13);
             this.label14.TabIndex = 15;
@@ -1162,7 +1168,7 @@
             // 
             this.label13.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(645, 92);
+            this.label13.Location = new System.Drawing.Point(110, 29);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(31, 13);
             this.label13.TabIndex = 14;
@@ -1171,7 +1177,7 @@
             // button1
             // 
             this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.button1.Location = new System.Drawing.Point(647, 22);
+            this.button1.Location = new System.Drawing.Point(513, 17);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(86, 25);
             this.button1.TabIndex = 1;
@@ -1182,7 +1188,7 @@
             // textBox4
             // 
             this.textBox4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox4.Location = new System.Drawing.Point(674, 88);
+            this.textBox4.Location = new System.Drawing.Point(147, 22);
             this.textBox4.Name = "textBox4";
             this.textBox4.Size = new System.Drawing.Size(39, 20);
             this.textBox4.TabIndex = 13;
@@ -1192,7 +1198,7 @@
             // 
             this.checkBox6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBox6.AutoSize = true;
-            this.checkBox6.Location = new System.Drawing.Point(648, 69);
+            this.checkBox6.Location = new System.Drawing.Point(30, 25);
             this.checkBox6.Name = "checkBox6";
             this.checkBox6.Size = new System.Drawing.Size(74, 17);
             this.checkBox6.TabIndex = 3;
@@ -1206,10 +1212,10 @@
             this.textBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBox2.Location = new System.Drawing.Point(6, 22);
+            this.textBox2.Location = new System.Drawing.Point(230, 15);
             this.textBox2.Multiline = true;
             this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(635, 105);
+            this.textBox2.Size = new System.Drawing.Size(277, 27);
             this.textBox2.TabIndex = 0;
             // 
             // groupBox1
@@ -1217,7 +1223,11 @@
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.checkBox_autoscroll);
             this.groupBox1.Controls.Add(this.RXbox);
+            this.groupBox1.Controls.Add(this.button32);
+            this.groupBox1.Controls.Add(this.checkBox_timer);
+            this.groupBox1.Controls.Add(this.checkBox_save);
             this.groupBox1.Controls.Add(this.clear_button);
             this.groupBox1.Controls.Add(this.checkBox2);
             this.groupBox1.Controls.Add(this.linefeed_checkBox);
@@ -1225,28 +1235,59 @@
             this.groupBox1.Controls.Add(this.RX_HEX_checkBox);
             this.groupBox1.Location = new System.Drawing.Point(3, 3);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(739, 490);
+            this.groupBox1.Size = new System.Drawing.Size(759, 577);
             this.groupBox1.TabIndex = 7;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "接收区";
+            this.groupBox1.Text = "监听区";
             // 
             // RXbox
             // 
-            this.RXbox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.RXbox.Location = new System.Drawing.Point(3, 22);
-            this.RXbox.Multiline = true;
+            this.RXbox.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.RXbox.ForeColor = System.Drawing.SystemColors.InfoText;
+            this.RXbox.Location = new System.Drawing.Point(6, 19);
             this.RXbox.Name = "RXbox";
-            this.RXbox.ReadOnly = true;
-            this.RXbox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.RXbox.Size = new System.Drawing.Size(736, 441);
-            this.RXbox.TabIndex = 0;
+            this.RXbox.Size = new System.Drawing.Size(747, 522);
+            this.RXbox.TabIndex = 18;
+            this.RXbox.Text = "";
+            this.RXbox.TextChanged += new System.EventHandler(this.RXbox_TextChanged);
+            // 
+            // button32
+            // 
+            this.button32.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.button32.Location = new System.Drawing.Point(601, 552);
+            this.button32.Name = "button32";
+            this.button32.Size = new System.Drawing.Size(73, 25);
+            this.button32.TabIndex = 17;
+            this.button32.Text = "保存log";
+            this.button32.UseVisualStyleBackColor = true;
+            this.button32.Click += new System.EventHandler(this.button32_Click);
+            // 
+            // checkBox_timer
+            // 
+            this.checkBox_timer.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.checkBox_timer.AutoSize = true;
+            this.checkBox_timer.Location = new System.Drawing.Point(427, 554);
+            this.checkBox_timer.Name = "checkBox_timer";
+            this.checkBox_timer.Size = new System.Drawing.Size(74, 17);
+            this.checkBox_timer.TabIndex = 16;
+            this.checkBox_timer.Text = "显示时间";
+            this.checkBox_timer.UseVisualStyleBackColor = true;
+            // 
+            // checkBox_save
+            // 
+            this.checkBox_save.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.checkBox_save.AutoSize = true;
+            this.checkBox_save.Location = new System.Drawing.Point(347, 554);
+            this.checkBox_save.Name = "checkBox_save";
+            this.checkBox_save.Size = new System.Drawing.Size(74, 17);
+            this.checkBox_save.TabIndex = 15;
+            this.checkBox_save.Text = "定时保存";
+            this.checkBox_save.UseVisualStyleBackColor = true;
             // 
             // clear_button
             // 
             this.clear_button.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.clear_button.Location = new System.Drawing.Point(666, 464);
+            this.clear_button.Location = new System.Drawing.Point(680, 552);
             this.clear_button.Name = "clear_button";
             this.clear_button.Size = new System.Drawing.Size(73, 25);
             this.clear_button.TabIndex = 2;
@@ -1258,7 +1299,9 @@
             // 
             this.checkBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.checkBox2.AutoSize = true;
-            this.checkBox2.Location = new System.Drawing.Point(79, 468);
+            this.checkBox2.Checked = true;
+            this.checkBox2.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBox2.Location = new System.Drawing.Point(79, 555);
             this.checkBox2.Name = "checkBox2";
             this.checkBox2.Size = new System.Drawing.Size(98, 17);
             this.checkBox2.TabIndex = 14;
@@ -1271,7 +1314,7 @@
             this.linefeed_checkBox.AutoSize = true;
             this.linefeed_checkBox.Checked = true;
             this.linefeed_checkBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.linefeed_checkBox.Location = new System.Drawing.Point(6, 468);
+            this.linefeed_checkBox.Location = new System.Drawing.Point(6, 555);
             this.linefeed_checkBox.Name = "linefeed_checkBox";
             this.linefeed_checkBox.Size = new System.Drawing.Size(74, 17);
             this.linefeed_checkBox.TabIndex = 13;
@@ -1283,7 +1326,7 @@
             // 
             this.TX_HEX_checkBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.TX_HEX_checkBox.AutoSize = true;
-            this.TX_HEX_checkBox.Location = new System.Drawing.Point(264, 468);
+            this.TX_HEX_checkBox.Location = new System.Drawing.Point(264, 555);
             this.TX_HEX_checkBox.Name = "TX_HEX_checkBox";
             this.TX_HEX_checkBox.Size = new System.Drawing.Size(86, 17);
             this.TX_HEX_checkBox.TabIndex = 12;
@@ -1294,7 +1337,7 @@
             // 
             this.RX_HEX_checkBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.RX_HEX_checkBox.AutoSize = true;
-            this.RX_HEX_checkBox.Location = new System.Drawing.Point(178, 468);
+            this.RX_HEX_checkBox.Location = new System.Drawing.Point(178, 555);
             this.RX_HEX_checkBox.Name = "RX_HEX_checkBox";
             this.RX_HEX_checkBox.Size = new System.Drawing.Size(86, 17);
             this.RX_HEX_checkBox.TabIndex = 11;
@@ -1895,6 +1938,23 @@
             this.button20.UseVisualStyleBackColor = true;
             this.button20.Click += new System.EventHandler(this.button20_Click);
             // 
+            // timer2
+            // 
+            this.timer2.Interval = 500;
+            this.timer2.Tick += new System.EventHandler(this.timer2_Tick);
+            // 
+            // checkBox_autoscroll
+            // 
+            this.checkBox_autoscroll.AutoSize = true;
+            this.checkBox_autoscroll.Checked = true;
+            this.checkBox_autoscroll.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBox_autoscroll.Location = new System.Drawing.Point(496, 555);
+            this.checkBox_autoscroll.Name = "checkBox_autoscroll";
+            this.checkBox_autoscroll.Size = new System.Drawing.Size(98, 17);
+            this.checkBox_autoscroll.TabIndex = 19;
+            this.checkBox_autoscroll.Text = "跟随最新数据";
+            this.checkBox_autoscroll.UseVisualStyleBackColor = true;
+            // 
             // OJ_Serial
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1958,7 +2018,7 @@
             this.MinimumSize = new System.Drawing.Size(750, 642);
             this.Name = "OJ_Serial";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "OpenJJ  V1.3.9";
+            this.Text = "OpenRedbuff  V1.3.9";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OJ_Serial_FormClosing);
             this.Load += new System.EventHandler(this.OJ_Serial_Load);
             this.SerialGroupBox.ResumeLayout(false);
@@ -2063,15 +2123,7 @@
         private System.Windows.Forms.CheckBox checkBox3;
         private System.Windows.Forms.TrackBar trackBar1;
         private System.Windows.Forms.TabPage tabPage1;
-        private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.Label label14;
-        private System.Windows.Forms.Label label13;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.TextBox textBox4;
-        private System.Windows.Forms.CheckBox checkBox6;
-        private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.TextBox RXbox;
         private System.Windows.Forms.Button clear_button;
         private System.Windows.Forms.CheckBox checkBox2;
         private System.Windows.Forms.CheckBox linefeed_checkBox;
@@ -2166,6 +2218,19 @@
         private System.Windows.Forms.Button button29;
         private System.Windows.Forms.Button button30;
         private System.Windows.Forms.Button button31;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.TextBox textBox4;
+        private System.Windows.Forms.CheckBox checkBox6;
+        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.Button button32;
+        private System.Windows.Forms.CheckBox checkBox_timer;
+        private System.Windows.Forms.CheckBox checkBox_save;
+        private System.Windows.Forms.RichTextBox RXbox;
+        private System.Windows.Forms.Timer timer2;
+        private System.Windows.Forms.CheckBox checkBox_autoscroll;
     }
 }
 
