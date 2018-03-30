@@ -28,7 +28,7 @@
 
 //#include <MirfHardwareSpiDriver.h>
 
-#define VERION    260
+#define VERION    270
 //#define DEBUG 11
 //#define ONLINE_DEBUG 12
 //#define STEP2STEP_DEBUG 13
@@ -1295,6 +1295,25 @@ void play_ss_ForTarget(int iDirect)
       break;
   }
 }
+bool SendOneKeyforBeat(int key_in)
+{
+	Clean_InputDataM();
+	timeout = 0;
+
+	w_Send_oneSignal(BT, key_in); //send data
+	SetRF_ModeM(READING_MODE);
+	
+		timeout = 0;
+		while ((timeout < 3)&&(rBuffer[0]!='*'))
+		{
+		  timeout++;
+		  w_Send_oneSignal(BT, key_in); //send data
+		  SetRF_ModeM(READING_MODE);
+		  	
+		  delay(20);
+		}
+
+};
 bool  oneBeat(int key_in)
 {
 #if 1 //v242  revivify
@@ -1316,7 +1335,9 @@ bool  oneBeat(int key_in)
     //  delay(1000);
           timeout = 0;
 
-    w_Send_oneSignal(BT, key_in); //send data
+//    w_Send_oneSignal(BT, key_in); //send data
+	SendOneKeyforBeat(key_in);
+
 	SetRF_ModeM(READING_MODE);
 
     timeout = 0;

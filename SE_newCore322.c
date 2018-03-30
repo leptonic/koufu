@@ -7,7 +7,7 @@
 //230 another version new libray to TRM
 //232 implement TRM in global.
 //250 sync with mother board
-#define VERISON 260
+#define VERISON 270
 //#define SLEEP_TEST 1
 //#define CONFIGRATION 1
 //#define _DEBUG_LOWPOWER 1  //1 means true; 2 means false ; should remove this define without debuging
@@ -524,7 +524,7 @@ void rf_Send_key()
 {
   int i;
   char sd[2];
-  sd[0] = '$';
+  sd[0] = '*';
   sd[1] = KEY_BIT;
 
     rf_Send(sd);
@@ -765,6 +765,13 @@ _test();
     { 
       if (rBuffer[1] == KEY_BIT)
       {
+      char sd[2];
+	  sd[0] = '*';	   
+       sd[1] = '*';       
+	  delay(5);
+	   rf_Send(sd);
+	    delay(10); // 270
+		
         run_training();		
 	  Clean_InputData();
       }
@@ -772,7 +779,7 @@ _test();
 	  	goto SCANKEY;
 	  
     }
-	 else if (rBuffer[0] == '$') //Open led
+	 else if (rBuffer[0] == '*') //Open led
     {
     Clean_InputData();
     delay(300);
@@ -810,7 +817,7 @@ _test();
 
     
 	  char sd[2];
-	   sd[0] = '$';
+	   sd[0] = '*';
 	   sd[1] = KEY_BIT;
 	    if (!III_Get_Battery_State())
         {
