@@ -32,7 +32,7 @@
 
 //#include <MirfHardwareSpiDriver.h>
 
-#define VERION    290
+#define VERION    291
 //#define DEBUG 11
 //#define ONLINE_DEBUG 12
 //#define STEP2STEP_DEBUG 13
@@ -2391,7 +2391,7 @@ void bt_upload_state_withoutack()// 0 means no respond.
 {
   String backdata;
   backdata = "";
-  backdata.concat("#ACKTION#");
+  backdata.concat("#ACKTION#\r\n");
 Serial.begin(BAUD_RATE);
   Serial.println(backdata);
 Serial.end();
