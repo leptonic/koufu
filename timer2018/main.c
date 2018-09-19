@@ -1,11 +1,16 @@
 //ver 0.0.01
 #include "LedControl.h"
 
+#include <EEPROM.h>
+
 
 LedControl lc=LedControl(12,11,10,2);
 //LedControl lc2=LedControl(12,11,9,1);
 /* we always wait a bit between updates of the display */
 unsigned long delaytime=10;
+
+int addr = 0;
+int gtimer=54;
 
 void setup() {
   /*
@@ -23,6 +28,13 @@ void setup() {
   lc.setIntensity(1,6);
   /* and clear the display */
   lc.clearDisplay(1);
+
+  EEPROM.write(addr, 99);
+  delay(250);
+	
+	gtimer = EEPROM.read(addr);
+
+  
 }
 
 /*
@@ -169,19 +181,25 @@ void welcome()
 //	
 
 }
-
-void loop() { 
-//welcome();
-showEnd();
-
-for(int i=50;i>0;i--)
+void run_timer(int start_timer)
 {
-//	welcome();
+	for(int i=start_timer;i>0;i--)
+	{
+			
+		showNumber(i);
+		delay(1000);
 	
-	showNumber(i);
-	delay(1000);
+	}
 
 }
+void loop()
+{ 
+//welcome();
+
+run_timer(gtimer);
+
+showEnd();
+
 
 
 //  single2();
