@@ -8,15 +8,17 @@ LedControl lc=LedControl(12,11,10,2);
 //LedControl lc2=LedControl(12,11,9,1);
 /* we always wait a bit between updates of the display */
 unsigned long delaytime=10;
+int pinInterrupt = 2; //接中断信号的脚  
 
 int addr = 0;
+int addr_mode=8;
+
 int gtimer=54;
+int gmode=0;
+void(* resetFunc) (void) = 0;
 
 void setup() {
-  /*
-   The MAX72XX is in power-saving mode on startup,
-   we have to do a wakeup call
-   */
+ 
   lc.shutdown(0,false);
   /* Set the brightness to a medium values */
   lc.setIntensity(0,6);
@@ -28,20 +30,74 @@ void setup() {
   lc.setIntensity(1,6);
   /* and clear the display */
   lc.clearDisplay(1);
-
-  EEPROM.write(addr, 99);
-  delay(250);
+ 
+   EEPROM.write(addr, 99);
+   delay(25);
 	
 	gtimer = EEPROM.read(addr);
+	   delay(25);
+	
+	gmode=EEPROM.read(addr_mode);
+	delay(25);
+	 
 
+	Serial.begin(9600); //打开串口	
+	
+	pinMode( pinInterrupt, INPUT);//设置管脚为输入  
+
+	//Enable中断管脚, 中断服务程序为onChange(), 监视引脚变化  
+	if(gmode!=99)
+		attachInterrupt( pinInterrupt, onChange, FALLING);  
+	else
+		detachInterrupt(pinInterrupt);
   
 }
+void onChange()  
+{  
+   if ( digitalRead(pinInterrupt) == LOW )  
+   	{
+   	delay(300);
+		if ( digitalRead(pinInterrupt) == LOW )  
+		{  
+		delay(400);
+		 if ( digitalRead(pinInterrupt) == LOW )  
+		   {
+				delay(299);
+		   if ( digitalRead(pinInterrupt) == LOW )	
+			 {
+				 
+				EEPROM.write(addr_mode, 99);
+			 delay(250);
+				 resetFunc();
+   
+		
+			 }
+		   }
+   
+		}  
+   }
+}  
 
-/*
- This method will display the characters for the
- word "Arduino" one after the other on the matrix. 
- (you need at least 5x7 leds to see the whole chars)
- */
+
+void showClear() 
+{
+  /* here is the data for the characters */
+ 
+  byte colon[8]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  
+  //byte c5[8]={};
+ 
+	for(int i=0;i<8;i++)
+	{
+	lc.setRow(0,i,colon[i]);
+	}
+
+	for(int i=0;i<8;i++)
+	{
+	lc.setRow(1,i,colon[i]);
+	}
+}
+
 void showNumber(int timers) 
 {
   /* here is the data for the characters */
@@ -193,8 +249,66 @@ void run_timer(int start_timer)
 
 }
 void loop()
-{ 
-//welcome();
+{
+	while(gmode==99)
+	{
+		int timeout;
+		
+		for(timeout=50;timeout>0;timeout--)
+		{
+		showNumber(gtimer);	
+		delay(500);
+		showClear();
+		delay(500);
+		showNumber(gtimer);	
+			if ( digitalRead(pinInterrupt) == LOW )  
+				{  
+				delay(47);
+				 if ( digitalRead(pinInterrupt) == LOW )  
+				   {
+				 
+						delay(67);
+				   if ( digitalRead(pinInterrupt) == LOW )	
+					 {
+						 
+				   timeout=30;
+						  if(gtimer>0)
+							   gtimer--;
+						   else
+							  gtimer=99;
+						 showNumber(gtimer);		   
+					   delay(500);
+				
+				
+					 }
+				   }
+				
+				}
+			
+			delay(200);
+
+		}
+		showNumber(gtimer);		 
+		delay(1000);
+		showClear();
+		delay(1000);
+		showNumber(gtimer);		 
+		delay(1000);
+		showClear();
+		delay(1000);	
+		showNumber(gtimer);		 
+		delay(1000);
+		showClear();
+		delay(1000);
+	EEPROM.write(addr, gtimer);	
+	delay(250);
+   EEPROM.write(addr_mode, 0);
+   delay(250);
+  	gmode=0;
+	resetFunc();
+   
+	}
+	//welcome();
 
 run_timer(gtimer);
 
