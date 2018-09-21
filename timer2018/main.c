@@ -1,4 +1,4 @@
-//ver 0.0.01
+//ver 0.1.01
 #include "LedControl.h"
 
 #include <EEPROM.h>
@@ -7,8 +7,9 @@
 LedControl lc=LedControl(12,11,10,2);
 //LedControl lc2=LedControl(12,11,9,1);
 /* we always wait a bit between updates of the display */
-unsigned long delaytime=10;
+unsigned long delaytime=3;
 int pinInterrupt = 2; //接中断信号的脚  
+int Reset_PIN = 8;
 
 int addr = 0;
 int addr_mode=8;
@@ -16,9 +17,65 @@ int addr_mode=8;
 int gtimer=54;
 int gmode=0;
 void(* resetFunc) (void) = 0;
+byte snd_1[6] = {0xAA, 0x07, 0x02, 0x00, 0x01, 0xB4};//1 280
+byte snd_2[6] = {0xAA, 0x07, 0x02, 0x00, 0x02, 0xB5};//2 200
+void SendData (byte addr)
+{
+  Serial.write(addr);
+}
+
+void Sendcmd(byte  ps[], int sizef)
+{
+  for (int i = 0; i < sizef; i++)
+  {
+    SendData(ps[i]);
+    //delay(1);
+  }
+
+}
+
+void II_PlayWave(byte wname[], int delayt)
+{
+
+
+  Sendcmd(wname, 6);
+
+	delay(delayt);
+}
+
+void III_Play_welcome()
+{
+	II_PlayWave(snd_1, 2300);
+
+}
+void III_Play_end()
+{
+	II_PlayWave(snd_2, 3000);
+
+}
+
+
+
+
+void set_volume()// aa 13 01 1e dc max
+{
+
+
+  SendData(0xaa);
+  SendData(0x13);
+  SendData(0x01);
+  SendData(0x1c);
+  SendData(0xda);
+
+
+}
+
 
 void setup() {
- 
+   digitalWrite(Reset_PIN, HIGH);
+  delay(200); 
+  pinMode(Reset_PIN, OUTPUT);     
+  
   lc.shutdown(0,false);
   /* Set the brightness to a medium values */
   lc.setIntensity(0,6);
@@ -31,7 +88,7 @@ void setup() {
   /* and clear the display */
   lc.clearDisplay(1);
  
-   EEPROM.write(addr, 99);
+  // EEPROM.write(addr, 99);
    delay(25);
 	
 	gtimer = EEPROM.read(addr);
@@ -43,32 +100,36 @@ void setup() {
 
 	Serial.begin(9600); //打开串口	
 	
+
+	
 	pinMode( pinInterrupt, INPUT);//设置管脚为输入  
 
+//	attachInterrupt( pinInterrupt, onChange, FALLING);  
+
 	//Enable中断管脚, 中断服务程序为onChange(), 监视引脚变化  
-	if(gmode!=99)
-		attachInterrupt( pinInterrupt, onChange, FALLING);  
-	else
-		detachInterrupt(pinInterrupt);
-  
+//	if(gmode!=99)
+//		attachInterrupt( pinInterrupt, onChange, FALLING);  
+//	else
+//		detachInterrupt(pinInterrupt);
+//  
 }
 void onChange()  
 {  
    if ( digitalRead(pinInterrupt) == LOW )  
    	{
-   	delay(300);
+   	delay(18);
 		if ( digitalRead(pinInterrupt) == LOW )  
 		{  
-		delay(400);
+		delay(49);
 		 if ( digitalRead(pinInterrupt) == LOW )  
 		   {
-				delay(299);
+				delay(99);
 		   if ( digitalRead(pinInterrupt) == LOW )	
 			 {
 				 
 				EEPROM.write(addr_mode, 99);
 			 delay(250);
-				 resetFunc();
+				   digitalWrite(Reset_PIN, LOW);
    
 		
 			 }
@@ -122,12 +183,22 @@ void showNumber(int timers)
 }
 void showEnd() 
 {
-  /* here is the data for the characters */
-  byte td[4][8]{{0xFF,0x80,0x80,0x80,0x80,0x80,0x80,0xFF},{0x00,0xFF,0x80,0x80,0x80,0x80,0xFF,0x00},{0x00,0x00,0xFF,0x80,0x80,0xFF,0x00,0x00},{0x00,0x00,0x00,0xFF,0xFF,0x00,0x00,0x00}};
-  byte ud[4][8]{{0xFF,0x01,0x01,0x01,0x01,0x01,0x01,0xFF},{0x00,0xFF,0x01,0x01,0x01,0x01,0xFF,0x00},{0x00,0x00,0xFF,0x01,0x01,0xFF,0x00,0x00},{0x00,0x00,0x00,0xFF,0xFF,0x00,0x00,0x00}};
-  //byte c5[8]={};
+	byte td[2][8]{{0x0A,0x1C,0x38,0x70,0x70,0x38,0x1C,0x0A},{0x50,0xE0,0xC0,0x01,0x01,0xC0,0xC0,0x50}};
+    byte ud[2][8]{{0x28,0x1C,0x0E,0x07,0x07,0x0E,0x1C,0x28},{0x0A,0x07,0x03,0x81,0x81,0x03,0x07,0x0A}};
+//  //byte c5[8]={};
 
-for(int j=0;j<4;j++)
+	for(int j=0;j<2;j++)
+	{
+		for(int i=0;i<8;i++)
+		{
+		lc.setRow(0,i,ud[j][i]);
+		delay(5);
+		lc.setRow(1,i,td[j][i]);
+		delay(50);
+		}
+
+	}
+for(int j=0;j<2;j++)
 {
 	for(int i=0;i<8;i++)
 	{
@@ -138,17 +209,34 @@ for(int j=0;j<4;j++)
 	}
 
 }
-	for(int j=3;j>-1;j--)
-	{
-		for(int i=0;i<8;i++)
-		{
-		lc.setRow(0,i,ud[j][i]);
-		delay(5);
-		lc.setRow(1,i,td[j][i]);
-		delay(50);
-		}
-	
-	}
+
+//  /* here is the data for the characters */
+//  byte td[4][8]{{0xFF,0x80,0x80,0x80,0x80,0x80,0x80,0xFF},{0x00,0xFF,0x80,0x80,0x80,0x80,0xFF,0x00},{0x00,0x00,0xFF,0x80,0x80,0xFF,0x00,0x00},{0x00,0x00,0x00,0xFF,0xFF,0x00,0x00,0x00}};
+//  byte ud[4][8]{{0xFF,0x01,0x01,0x01,0x01,0x01,0x01,0xFF},{0x00,0xFF,0x01,0x01,0x01,0x01,0xFF,0x00},{0x00,0x00,0xFF,0x01,0x01,0xFF,0x00,0x00},{0x00,0x00,0x00,0xFF,0xFF,0x00,0x00,0x00}};
+//  //byte c5[8]={};
+
+//for(int j=0;j<4;j++)
+//{
+//	for(int i=0;i<8;i++)
+//	{
+//	lc.setRow(0,i,ud[j][i]);
+//	delay(5);
+//	lc.setRow(1,i,td[j][i]);
+//	delay(50);
+//	}
+
+//}
+//	for(int j=3;j>-1;j--)
+//	{
+//		for(int i=0;i<8;i++)
+//		{
+//		lc.setRow(0,i,ud[j][i]);
+//		delay(5);
+//		lc.setRow(1,i,td[j][i]);
+//		delay(50);
+//		}
+//	
+//	}
 
 
 }
@@ -203,38 +291,25 @@ void columns() {
 void show_time() {
   
 }
-void welcome()
+void setting_welcome()
 {
-	for(int row=0;row<8;row++) 
+	
+	/* here is the data for the characters */
+	 
+	  byte colon[8]={0x00,0x00,0x6E,0x88,0x6E,0x28,0xCE,0x00};
+	  	  byte colon2[8]={0x00,0x00,0xE0,0x44,0x40,0x44,0x40,0x00};
+	  //byte c5[8]={};
+	 
+		for(int i=0;i<8;i++)
 		{
-			
-	    for(int col=0;col<16;col++)
-			{
-	          delay(delaytime);
-			  if(col<8)
-	          lc.setLed(1,row,col,true);
-			  else
-			  lc.setLed(0,row,col-8,true);
-			  
-	          delay(delaytime);
-		      for(int i=0;i<col;i++)
-			  	{
-		          if(col<8)
-		          lc.setLed(1,row,col,false);
-				  else
-				  lc.setLed(0,row,col-8,false);
-				
-		        delay(delaytime);
-		      	 if(col<8)
-		          lc.setLed(1,row,col,true);
-				  else
-				  lc.setLed(0,row,col-8,true);
-			
-		        delay(delaytime);
-		      }
-    }
-  }
-//	
+		lc.setRow(0,i,colon2[i]);
+		}
+	
+		for(int i=0;i<8;i++)
+		{
+		lc.setRow(1,i,colon[i]);
+		}
+
 
 }
 void run_timer(int start_timer)
@@ -243,7 +318,8 @@ void run_timer(int start_timer)
 	{
 			
 		showNumber(i);
-		delay(1000);
+		onChange();
+		delay(980);
 	
 	}
 
@@ -253,14 +329,16 @@ void loop()
 	while(gmode==99)
 	{
 		int timeout;
-		
+		setting_welcome();
+		delay(2000);
+		showNumber(gtimer);	
+		delay(250);
+		showClear();
+		delay(400);
+		showNumber(gtimer);	
 		for(timeout=50;timeout>0;timeout--)
 		{
-		showNumber(gtimer);	
-		delay(500);
-		showClear();
-		delay(500);
-		showNumber(gtimer);	
+	
 			if ( digitalRead(pinInterrupt) == LOW )  
 				{  
 				delay(47);
@@ -305,16 +383,24 @@ void loop()
    EEPROM.write(addr_mode, 0);
    delay(250);
   	gmode=0;
+	 digitalWrite(Reset_PIN, LOW);
 	resetFunc();
    
 	}
 	//welcome();
+III_Play_welcome();
 
 run_timer(gtimer);
 
+III_Play_end();
 showEnd();
 
+while(true)
+{
+showClear();
 
+;
+}
 
 //  single2();
 }
